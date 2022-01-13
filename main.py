@@ -1,8 +1,4 @@
-import pygame, random
-
-
-class Board:
-    pass
+import pygame
 
 
 class Castle:
@@ -37,6 +33,23 @@ class Swordman:
     pass
 
 
+class Board:
+    def __init__(self):
+        for i in range(17):
+            for j in range(32):
+                if lst_map_the_isle[i][j] == 2:
+                    self.location_my_castle = (i, j)
+                if lst_map_the_isle[i][j] == 3:
+                    self.location_bot_castle = (i, j)
+
+
+    def get_cell(self):
+        mouse = pygame.mouse.get_pos()
+        x = mouse[0] // 60
+        y = mouse[1] // 60
+        return x, y
+
+
 class Game:
     def __init__(self):
         self.action_stage = "main_menu"
@@ -48,7 +61,7 @@ class Game:
 
     def click(self):
         if game.return_action_stage() == "map_VS" and not self.is_construction_window:
-            self.selection_cell = game.get_cell()
+            self.selection_cell = board.get_cell()
             self.is_construction_window = True
         elif pygame.mouse.get_pos()[0] > 400:
             self.is_construction_window = False
@@ -56,7 +69,7 @@ class Game:
     def render(self):
         self.render_functions[self.action_stage]()
 
-    def draw_button(self, width, height, x, y, message, stage="main_menu", font_size=30):
+    def draw_button(self, width, height, x, y, message, stage="None", font_size=30):
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
 
@@ -65,7 +78,8 @@ class Game:
             if click[0] == 1:
                 pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds\button_click.wav'))
                 pygame.time.delay(150)
-                self.action_stage = stage
+                if stage in self.render_functions:
+                    self.action_stage = stage
 
         game.print_text(font_size, message, (0, 0, 0), (x + 5, y + 5))
 
@@ -113,12 +127,6 @@ class Game:
             game.draw_button(90, 50, 100, 330, "Шахта")
             game.draw_button(90, 50, 100, 430, "Кузня")
 
-    def get_cell(self):
-        mouse = pygame.mouse.get_pos()
-        x = mouse[0] // 60
-        y = mouse[1] // 60
-        return x, y
-
     def start_game_soundtrack(self):
         pygame.mixer.music.load("sounds\soundtrack.mp3")
         pygame.mixer.music.play(-1)
@@ -128,6 +136,11 @@ class Game:
 
     def run_soundtrack(self):
         pygame.mixer.music.unpause()
+
+    def build(self):
+        pass
+
+
 
 
 
@@ -174,6 +187,7 @@ pygame.display.set_caption("Castle story")
 screen = pygame.display.set_mode(size)
 pygame.display.set_icon(pygame.image.load("textures\icon.png"))
 game = Game()
+board = Board()
 game.start_game_soundtrack()
 
 while running:
