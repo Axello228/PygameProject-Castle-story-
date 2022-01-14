@@ -41,7 +41,18 @@ class Board:
                     self.location_my_castle = (i, j)
                 if lst_map_the_isle[i][j] == 3:
                     self.location_bot_castle = (i, j)
+        self.player1 = [10, 0, 0]
+        self.builds_player1 = []
+        self.player2 = [0, 0, 0]
+        self.builds_player2 = []
+        self.motion = 1
+        self.alchemistry_stage = 0
 
+    def get_plyer(self):
+        if self.motion == 1:
+            return self.player1
+        else:
+            return self.player2
 
     def get_cell(self):
         mouse = pygame.mouse.get_pos()
@@ -49,12 +60,26 @@ class Board:
         y = mouse[1] // 60
         return x, y
 
+    def course_change(self):
+        if game.return_action_stage() == "map_VS":
+            if self.motion == 1:
+                self.motion = 2
+            else:
+                self.motion = 1
+
+    def build(self, what_build):
+        if self.motion == 1:
+            pass
+        else:
+            pass
+
 
 class Game:
     def __init__(self):
         self.action_stage = "main_menu"
         self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
                     "map_VS": self.render_map_VS}
+        self.building = {"house": 16, "sawmill": 17, "alchemistry": 18, "mine": 19, "smithy": 20}
         self.active_clr = (204, 229, 255)
         self.is_construction_window = False
         self.selection_cell = (0, 0)
@@ -80,6 +105,8 @@ class Game:
                 pygame.time.delay(150)
                 if stage in self.render_functions:
                     self.action_stage = stage
+                if stage in self.building:
+                    self.render_build(self.building[stage])
 
         game.print_text(font_size, message, (0, 0, 0), (x + 5, y + 5))
 
@@ -94,6 +121,12 @@ class Game:
                 screen.blit(pygame.image.load(lst_textures[lst_map_the_isle[i][j]]), (x, y))
                 x += 60
             y += 60
+        x, y = 600, 0
+        lst_player = board.get_plyer()
+        for i in range(3):
+            pygame.draw.rect(screen, self.active_clr, (x, y, 150, 50))
+            game.print_text(40, str(lst_player[i]), (0, 0, 0), (x, y))
+            x += 200
 
         if self.is_construction_window:
             game.render_construction_window(self.selection_cell)
@@ -121,11 +154,11 @@ class Game:
             for i in range(16, 21):
                 screen.blit(pygame.image.load(lst_textures[i]), (20, 20 + cout))
                 cout += 100
-            game.draw_button(70, 50, 100, 30, "Дом")
-            game.draw_button(150, 50, 100, 130, "Лесопилка")
-            game.draw_button(290, 50, 100, 230, "Алхимическая платка")
-            game.draw_button(90, 50, 100, 330, "Шахта")
-            game.draw_button(90, 50, 100, 430, "Кузня")
+            game.draw_button(70, 50, 100, 30, "Дом", "house")
+            game.draw_button(150, 50, 100, 130, "Лесопилка", "sawmill")
+            game.draw_button(290, 50, 100, 230, "Алхимическая платка", "alchemistry")
+            game.draw_button(90, 50, 100, 330, "Шахта", "mine")
+            game.draw_button(90, 50, 100, 430, "Кузня", "smithy")
 
     def start_game_soundtrack(self):
         pygame.mixer.music.load("sounds\soundtrack.mp3")
@@ -137,14 +170,9 @@ class Game:
     def run_soundtrack(self):
         pygame.mixer.music.unpause()
 
-    def build(self):
-        pass
-
-
-
-
-
-
+    def render_build(self, what_build):
+        lst_map_the_isle[self.selection_cell[1]][self.selection_cell[0]] = 16
+        board.build(what_build)
 
 
 
@@ -196,6 +224,9 @@ while running:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             game.click()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                board.course_change()
     game.render()
 
     pygame.display.flip()
