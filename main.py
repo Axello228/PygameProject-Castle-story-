@@ -1,38 +1,6 @@
 import pygame
 
 
-class Castle:
-    pass
-
-
-class Sawmill:
-    pass
-
-
-class Mine:
-    pass
-
-
-class Forest:
-    pass
-
-
-class House:
-    pass
-
-
-class Alchemistry:
-    pass
-
-
-class Smithy:
-    pass
-
-
-class Swordman:
-    pass
-
-
 class Board:
     def __init__(self):
         for i in range(17):
@@ -48,7 +16,12 @@ class Board:
         self.builds_player2 = []
         self.edifice_player2 = []
         self.motion = 1
-        self.alchemistry_stage = 0
+        self.alchemistry_stage_player1 = 0
+        self.alchemistry_stage_player2 = 0
+        self.edifice_functions = [self.house, self.sawmill, self.alchemistry, self.mine, self.smithy]
+        self.house_plase_player1 = 0
+        self.house_plase_player2 = 0
+        self.cords_for_sawmill = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
     def get_player(self):
         if self.motion == 1:
@@ -58,9 +31,7 @@ class Board:
 
     def get_cell(self):
         mouse = pygame.mouse.get_pos()
-        x = mouse[0] // 60
-        y = mouse[1] // 60
-        return x, y
+        return mouse[0] // 60, mouse[1] // 60
 
     def course_change(self):
         if game.return_action_stage() == "map_VS":
@@ -72,10 +43,12 @@ class Board:
                         self.builds_player2[i][1] -= 1
                     if self.builds_player2[i][1] == 0:
                         lst_map_the_isle[self.builds_player2[i][2][1]][self.builds_player2[i][2][0]] = self.builds_player2[i][0]
-                        self.edifice_player2.append(self.builds_player2[i][0])
+                        self.edifice_player2.append([self.builds_player2[i][0], (self.builds_player2[i][-1])])
                         self.builds_player2[i], self.builds_player2[-1] = self.builds_player2[-1], self.builds_player2[i]
                         self.builds_player2.pop()
                     i += 1
+                for elem in self.edifice_player2:
+                    self.edifice_functions[elem[0] % 16](elem[-1])
             else:
                 self.motion = 1
                 i = 0
@@ -84,10 +57,12 @@ class Board:
                         self.builds_player1[i][1] -= 1
                     if self.builds_player1[i][1] == 0:
                         lst_map_the_isle[self.builds_player1[i][2][1]][self.builds_player1[i][2][0]] = self.builds_player1[i][0]
-                        self.edifice_player1.append(self.builds_player1[i][0])
+                        self.edifice_player1.append([self.builds_player1[i][0], (self.builds_player1[i][-1])])
                         self.builds_player1[i], self.builds_player1[-1] = self.builds_player1[-1], self.builds_player1[i]
                         self.builds_player1.pop()
                     i += 1
+                for elem in self.edifice_player1:
+                    self.edifice_functions[elem[0] % 16](elem[-1])
 
     def build(self, what_build):
         if self.motion == 1:
@@ -102,6 +77,38 @@ class Board:
         else:
             return max(abs(self.location_my_castle[0] - pos[0]), abs(self.location_my_castle[1] - pos[1]))
 
+    def sawmill(self, pos):
+        cout_wood = 0
+        for elem in self.cords_for_sawmill:
+            if lst_map_the_isle[pos[1] + elem[1]][pos[0] + elem[0]] == 1:
+                cout_wood += 1
+        if self.motion == 1:
+            self.player1[0] += cout_wood
+        else:
+            self.player2[0] += cout_wood
+
+    def mine(self, pos):
+        if self.motion == 1:
+            self.player1[1] += 1
+        else:
+            self.player2[1] += 1
+
+    def smithy(self, pos):
+        if self.motion == 1:
+            if self.player1[1] >= 2:
+                self.player1[1] -= 2
+                self.player1[2] += 1
+        else:
+            if self.player2[1] >= 2:
+                self.player2[1] -= 2
+                self.player2[2] += 1
+
+    def alchemistry(self, pos):
+        pass
+
+    def house(self, pos):
+        pass
+
 
 class Game:
     def __init__(self):
@@ -111,6 +118,7 @@ class Game:
                 "textures\sw_beach.png", "textures\\bot_swordsman_r.png", "textures\\bot_swordsman_l.png",
                 "textures\my_swordsman_r.png", "textures\my_swordsman_l.png", "textures\house.png", "textures\sawmill.png",
                 "textures\\alchemistry.png", "textures\mine.png", "textures\smithy.png", "textures\\byilding_table.png"]
+        self.resources = ["Дерево: ", "Руда: ", "Слитки: "]
         self.action_stage = "main_menu"
         self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
                     "map_VS": self.render_map_VS}
@@ -118,6 +126,7 @@ class Game:
         self.active_clr = (204, 229, 255)
         self.is_construction_window = False
         self.selection_cell = (0, 0)
+        self.is_alchemistry_window = False
 
     def click(self):
         if game.return_action_stage() == "map_VS" and not self.is_construction_window:
@@ -156,12 +165,12 @@ class Game:
                 screen.blit(pygame.image.load(self.lst_textures[lst_map_the_isle[i][j]]), (x, y))
                 x += 60
             y += 60
-        x, y = 600, 0
+        x, y = 500, 0
         lst_player = board.get_player()
         for i in range(3):
-            pygame.draw.rect(screen, self.active_clr, (x, y, 150, 50))
-            game.print_text(40, str(lst_player[i]), (0, 0, 0), (x, y))
-            x += 200
+            pygame.draw.rect(screen, self.active_clr, (x, y, 250, 50))
+            game.print_text(40, self.resources[i] + str(lst_player[i]), (0, 0, 0), (x, y))
+            x += 300
 
         if self.is_construction_window:
             game.render_construction_window(self.selection_cell)
@@ -212,6 +221,7 @@ class Game:
     def get_pos(self):
         return self.selection_cell
 
+
 lst_map_the_isle = [[8, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 9],
          [7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 6],
          [7, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 6],
@@ -219,13 +229,13 @@ lst_map_the_isle = [[8, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
          [7, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 6],
          [7, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 6],
          [7, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 6],
-         [7, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 6],
+         [7, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 6],
          [7, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 6],
          [7, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 6],
          [7, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 6],
          [7, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
          [7, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 6],
-         [7, 0, 0, 0, 2, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 6],
+         [7, 0, 0, 2, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 6],
          [7, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 6],
          [7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6],
          [11, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 10]]
