@@ -9,10 +9,10 @@ class Board:
                     self.location_my_castle = (j, i)
                 if map[i][j] == 3:
                     self.location_bot_castle = (j, i)
-        self.player1 = [10, 0, 0]
+        self.player1 = [100, 100, 100]
         self.builds_player1 = []
         self.edifice_player1 = []
-        self.player2 = [0, 0, 0]
+        self.player2 = [10, 0, 0]
         self.builds_player2 = []
         self.edifice_player2 = []
         self.motion = 1
@@ -116,6 +116,7 @@ class Board:
             return self.alchemistry_stage_player1
         else:
             return self.alchemistry_stage_player2
+
 
 class Game:
     def __init__(self):
@@ -288,10 +289,12 @@ class Game:
 
     def render_alchemistry_window(self):
         if board.return_alchemistry_stage() < 3:
-            game.draw_button(120, 35, self.alchemistry_pos[0] * 60, self.alchemistry_pos[1] * 60, "Улутшить", font_size=25)
+            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (self.alchemistry_pos[0] * 60 - 120, self.alchemistry_pos[1] * 60 - 120))
+            game.draw_button(120, 35, self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 - 40, "Улутшить", font_size=25)
+            game.print_text(25, "Уровень: " + str(board.return_alchemistry_stage()), (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60))
         else:
-            game.print_text(25, "Максимальный", (0, 0, 0), (300, 300))
-            game.print_text(25, "уровень", (0, 0, 0), (300, 335))
+            game.print_text(25, "Максимальный", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 - 40))
+            game.print_text(25, "уровень", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60))
 
 
 def load_map():
