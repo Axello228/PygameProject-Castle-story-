@@ -204,6 +204,7 @@ class Game:
             game.render_alchemistry_window()
 
     def render_esc_window(self):
+        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
         game.draw_button(240, 50, 825, 340, "Продолжить игру", "map_VS")
         game.draw_button(240, 50, 825, 400, "Главное меню", "main_menu")
         game.draw_button(240, 50, 825, 460, "Сохранить")
@@ -215,15 +216,22 @@ class Game:
 
     def render_mode_selection_screen(self):
         screen.blit(main_screen, (0, 0))
-        game.draw_button(135, 55, 200, 150, "1 VS 1", "map_VS", font_size=45)
-        game.draw_button(135, 55, 850, 150, "Waves", font_size=45)
-        game.draw_button(170, 55, 1450, 150, "Invasion", font_size=45)
+        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (800, 1100)), (-70, -50))
+        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (800, 1100)), (560, -50))
+        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (800, 1100)), (1190, -50))
+        game.draw_button(135, 55, 250, 80, "1 VS 1", "map_VS", font_size=45)
+        game.draw_button(135, 55, 890, 80, "Waves", font_size=45)
+        game.draw_button(170, 55, 1500, 80, "Invasion", font_size=45)
+        game.print_text(30, "В разработке", (0, 0, 0), (110, 200))
+        game.print_text(30, "В разработке", (0, 0, 0), (740, 200))
+        game.print_text(30, "В разработке", (0, 0, 0), (1370, 200))
 
     def render_home_screen(self):
         screen.blit(main_screen, (0, 0))
-        game.draw_button(250, 45, 850, 500, "Начать новую игру", "mode_selection")
-        game.draw_button(250, 45, 850, 550, "Загрузить игру")
-        game.draw_button(250, 45, 850, 600, "Настройки", "settings")
+        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (460, 400)), (750, 320))
+        game.draw_button(250, 45, 850, 400, "Начать новую игру", "mode_selection")
+        game.draw_button(250, 45, 850, 450, "Загрузить игру")
+        game.draw_button(250, 45, 850, 500, "Настройки", "settings")
 
     def print_text(self, size, message, color, location, fnt='serif'):
         screen.blit(pygame.font.SysFont(fnt, size).render(message, True, color), location)
@@ -257,12 +265,13 @@ class Game:
 
     def render_settings_window(self):
         screen.blit(main_screen, (0, 0))
-        game.draw_button(240, 50, 850, 340, "Продолжить игру", "map_VS") # нет условия на отрисовку этой кнопки!!!
-        game.draw_button(240, 50, 850, 400, "Главное меню", "main_menu")
-        game.draw_button(240, 50, 850, 460, "Отклчить музыку", "off_music")
-        game.draw_button(240, 50, 850, 520, "Включить музыку", "on_music")
-        game.draw_button(240, 50, 850, 580, "Отключить звук", "off_sounds")
-        game.draw_button(240, 50, 850, 640, "Включить звук", "on_sounds")
+        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (580, 600)), (680, 150))
+        game.draw_button(240, 50, 850, 260, "Продолжить игру", "map_VS") # нет условия на отрисовку этой кнопки!!!
+        game.draw_button(240, 50, 850, 320, "Главное меню", "main_menu")
+        game.draw_button(240, 50, 850, 380, "Отклчить музыку", "off_music")
+        game.draw_button(240, 50, 850, 440, "Включить музыку", "on_music")
+        game.draw_button(240, 50, 850, 500, "Отключить звук", "off_sounds")
+        game.draw_button(240, 50, 850, 560, "Включить звук", "on_sounds")
 
     def on_sounds(self):
         self.is_sounds = True
