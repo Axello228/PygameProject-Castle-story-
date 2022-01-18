@@ -117,6 +117,20 @@ class Board:
         else:
             return self.alchemistry_stage_player2
 
+    def up_alchemistry(self):
+        if self.motion == 1:
+            self.alchemistry_stage_player1 += 1
+        else:
+            self.alchemistry_stage_player2 += 1
+
+    def cost_construction(self, build):
+        if self.motion == 1:
+            for i in range(len(build)):
+                self.player1[i] -= build[i]
+        else:
+            for i in range(len(build)):
+                self.player2[i] -= build[i]
+
 
 class Game:
     def __init__(self):
@@ -127,10 +141,12 @@ class Game:
                 "textures\my_swordsman_r.png", "textures\my_swordsman_l.png", "textures\house.png", "textures\sawmill.png",
                 "textures\\alchemistry.png", "textures\mine.png", "textures\smithy.png", "textures\\byilding_table.png"]
         self.resources = ["Дерево: ", "Руда: ", "Слитки: "]
+        self.actions_in_the_game = {"up_alchemistry": self.up_alchemistry, "exit_alchemistry": self.off_alchemistry_window}
         self.action_stage = "main_menu"
         self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
                     "map_VS": self.render_map_VS, "settings": self.render_settings_window}
-        self.building = {"house": 16, "sawmill": 17, "alchemistry": 18, "mine": 19, "smithy": 20}
+        self.building = {"house": [16, 10, 0, 0], "sawmill": [17, 0, 0, 0], "alchemistry": [18, 0, 0, 0],
+                         "mine": [19, 0, 0, 0], "smithy": [20, 0, 0, 0]}
         self.settings = {"on_music": self.on_soundtrack, "off_music": self.off_sondtrack, "on_sounds": self.on_sounds,
                          "off_sounds": self.off_sounds}
         self.active_clr = (204, 229, 255)
@@ -140,6 +156,12 @@ class Game:
         self.is_sounds = True
         self.is_esc = False
         self.alchemistry_pos = (0, 0)
+
+    def off_alchemistry_window(self):
+        self.is_alchemistry_window = False
+
+    def up_alchemistry(self):
+        board.up_alchemistry()
 
     def click(self):
         if game.return_action_stage() == "map_VS":
@@ -152,9 +174,6 @@ class Game:
             if map[pos[1]][pos[0]] == 18 and not self.is_alchemistry_window:
                 self.alchemistry_pos = board.get_cell()
                 self.is_alchemistry_window = True
-            elif pygame.mouse.get_pressed()[0] == 1:
-                self.is_alchemistry_window = False
-
 
     def render(self):
         self.render_functions[self.action_stage]()
@@ -174,9 +193,12 @@ class Game:
                 if stage in self.render_functions:
                     self.action_stage = stage
                 if stage in self.building:
-                    self.render_build(self.building[stage])
+                    board.cost_construction(self.building[stage][1:]) # нужно сделать проверку на то что игрок может построить это здание
+                    self.render_build(self.building[stage][0])
                 if stage in self.settings:
                     self.settings[stage]()
+                if stage in self.actions_in_the_game:
+                    self.actions_in_the_game[stage]()
 
         game.print_text(font_size, message, (0, 0, 0), (x + 5, y + 5))
 
@@ -269,7 +291,7 @@ class Game:
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (580, 600)), (680, 150))
         game.draw_button(240, 50, 850, 260, "Продолжить игру", "map_VS") # нет условия на отрисовку этой кнопки!!!
         game.draw_button(240, 50, 850, 320, "Главное меню", "main_menu")
-        game.draw_button(240, 50, 850, 380, "Отклчить музыку", "off_music")
+        game.draw_button(240, 50, 850, 380, "Отключить музыку", "off_music")
         game.draw_button(240, 50, 850, 440, "Включить музыку", "on_music")
         game.draw_button(240, 50, 850, 500, "Отключить звук", "off_sounds")
         game.draw_button(240, 50, 850, 560, "Включить звук", "on_sounds")
@@ -290,11 +312,13 @@ class Game:
     def render_alchemistry_window(self):
         if board.return_alchemistry_stage() < 3:
             screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (self.alchemistry_pos[0] * 60 - 120, self.alchemistry_pos[1] * 60 - 120))
-            game.draw_button(120, 35, self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 - 40, "Улутшить", font_size=25)
+            game.draw_button(120, 35, self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 - 40, "Улучшить", "up_alchemistry", font_size=25)
             game.print_text(25, "Уровень: " + str(board.return_alchemistry_stage()), (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60))
         else:
-            game.print_text(25, "Максимальный", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 - 40))
-            game.print_text(25, "уровень", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60))
+            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (self.alchemistry_pos[0] * 60 - 120, self.alchemistry_pos[1] * 60 - 120))
+            game.print_text(25, "Максимальный", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 50, self.alchemistry_pos[1] * 60 - 40))
+            game.print_text(25, "уровень", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 50, self.alchemistry_pos[1] * 60))
+        game.draw_button(120, 35, self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 + 50, "Выход", "exit_alchemistry", font_size=25)
 
 
 def load_map():
