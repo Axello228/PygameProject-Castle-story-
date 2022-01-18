@@ -22,6 +22,7 @@ class Board:
         self.house_place_player1 = 0
         self.house_place_player2 = 0
         self.cords_for_sawmill = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        self.alchemistry_cost = [(10, 0, 0), (15, 10, -0), (20, 15, 10), "1Беги!!!1"]
 
     def get_player(self):
         if self.motion == 1:
@@ -131,6 +132,8 @@ class Board:
             for i in range(len(build)):
                 self.player2[i] -= build[i]
 
+    def return_alchemistry_cost(self):
+        return self.alchemistry_cost
 
 class Game:
     def __init__(self):
@@ -158,6 +161,8 @@ class Game:
         self.is_esc = False
         self.alchemistry_pos = (0, 0)
         self.exit = False
+        self.is_smithy_window = False
+        self.smithy_pos = (0, 0)
 
     def exit(self):
         self.exit = True
@@ -182,6 +187,9 @@ class Game:
             if map[pos[1]][pos[0]] == 18 and not self.is_alchemistry_window:
                 self.alchemistry_pos = board.get_cell()
                 self.is_alchemistry_window = True
+            if map[pos[1]][pos[0]] == 20 and not self.is_smithy_window:
+                self.smithy_pos = board.get_cell()
+                self.is_smithy_window = True
 
     def render(self):
         self.render_functions[self.action_stage]()
@@ -230,9 +238,10 @@ class Game:
 
         if self.is_construction_window:
             game.render_construction_window(self.selection_cell)
-
         if self.is_alchemistry_window:
             game.render_alchemistry_window()
+        if self.is_smithy_window:
+            game.render_smithy_window()
 
     def render_esc_window(self):
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
@@ -333,15 +342,22 @@ class Game:
                 self.is_esc = True
 
     def render_alchemistry_window(self):
-        if board.return_alchemistry_stage() < 3:
+        if board.return_alchemistry_stage() != 3:
             screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (self.alchemistry_pos[0] * 60 - 120, self.alchemistry_pos[1] * 60 - 120))
             game.draw_button(120, 35, self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 - 40, "Улучшить", "up_alchemistry", font_size=25)
-            game.print_text(25, "Уровень: " + str(board.return_alchemistry_stage()), (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60))
+            game.print_text(25, "Стоимость:", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60))
+            game.print_text(25, "Уровень: " + str(board.return_alchemistry_stage()), (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 + 80))
+            game.print_text(25, str(board.return_alchemistry_cost()[board.return_alchemistry_stage()])[1:-1], (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 + 40))
         else:
             screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (self.alchemistry_pos[0] * 60 - 120, self.alchemistry_pos[1] * 60 - 120))
             game.print_text(25, "Максимальный", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 50, self.alchemistry_pos[1] * 60 - 40))
             game.print_text(25, "уровень", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 50, self.alchemistry_pos[1] * 60))
-        game.draw_button(120, 35, self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 + 50, "Выход", "exit_alchemistry", font_size=25)
+        game.draw_button(100, 35, self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 + 120, "Выход", "exit_alchemistry", font_size=25)
+
+    def render_smithy_window(self):
+        if board.return_alchemistry_stage() == 3:
+            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (self.smithy_pos[0] * 60 - 120, self.smithy_pos[1] * 60 - 120))
+
 
 
 def load_map():
