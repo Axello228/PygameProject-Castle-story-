@@ -141,12 +141,13 @@ class Game:
                 "textures\my_swordsman_r.png", "textures\my_swordsman_l.png", "textures\house.png", "textures\sawmill.png",
                 "textures\\alchemistry.png", "textures\mine.png", "textures\smithy.png", "textures\\byilding_table.png"]
         self.resources = ["Дерево: ", "Руда: ", "Слитки: "]
-        self.actions_in_the_game = {"up_alchemistry": self.up_alchemistry, "exit_alchemistry": self.off_alchemistry_window}
+        self.actions_in_the_game = {"up_alchemistry": self.up_alchemistry, "exit_alchemistry": self.off_alchemistry_window,
+                                    'exit': self.exit}
         self.action_stage = "main_menu"
         self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
                     "map_VS": self.render_map_VS, "settings": self.render_settings_window}
-        self.building = {"house": [16, 10, 0, 0], "sawmill": [17, 0, 0, 0], "alchemistry": [18, 0, 0, 0],
-                         "mine": [19, 0, 0, 0], "smithy": [20, 0, 0, 0]}
+        self.building = {"house": [16, 20, 0,50], "sawmill": [17, 5, 0, 0], "alchemistry": [18, 10, 0, 0],
+                         "mine": [19, 15, 0, 0], "smithy": [20, 20, 10, 0]}
         self.settings = {"on_music": self.on_soundtrack, "off_music": self.off_sondtrack, "on_sounds": self.on_sounds,
                          "off_sounds": self.off_sounds}
         self.active_clr = (204, 229, 255)
@@ -156,6 +157,13 @@ class Game:
         self.is_sounds = True
         self.is_esc = False
         self.alchemistry_pos = (0, 0)
+        self.exit = False
+
+    def exit(self):
+        self.exit = True
+
+    def return_exit(self):
+        return self.exit
 
     def off_alchemistry_window(self):
         self.is_alchemistry_window = False
@@ -255,6 +263,7 @@ class Game:
         game.draw_button(250, 45, 850, 400, "Начать новую игру", "mode_selection")
         game.draw_button(250, 45, 850, 450, "Загрузить игру")
         game.draw_button(250, 45, 850, 500, "Настройки", "settings")
+        game.draw_button(250, 45, 850, 550, "Выход", "exit")
 
     def print_text(self, size, message, color, location, fnt='serif'):
         screen.blit(pygame.font.SysFont(fnt, size).render(message, True, color), location)
@@ -263,14 +272,28 @@ class Game:
         if map[pos[1]][pos[0]] == 0:
             screen.blit(construction_window_screen, (0, 0))
             cout = 0
-            for i in range(16, 21):
+            alchemistry = board.return_alchemistry_stage()
+            if alchemistry == 0:
+                build = (16, 19)
+            elif alchemistry == 1:
+                build = (16, 20)
+            else:
+                build = (16, 21)
+            for i in range(build[0], build[1]):
                 screen.blit(pygame.image.load(self.lst_textures[i]), (20, 20 + cout))
                 cout += 100
             game.draw_button(70, 50, 100, 30, "Дом", "house")
+            game.print_text(20, "Деревo: 20, Руда: 0, Железо: 5", (0, 0, 0), (110, 5))
             game.draw_button(150, 50, 100, 130, "Лесопилка", "sawmill")
+            game.print_text(20, "Деревo: 5, Руда: 0, Железо: 0", (0, 0, 0), (110, 105))
             game.draw_button(290, 50, 100, 230, "Алхимическая платка", "alchemistry")
-            game.draw_button(90, 50, 100, 330, "Шахта", "mine")
-            game.draw_button(90, 50, 100, 430, "Кузня", "smithy")
+            game.print_text(20, "Деревo: 10, Руда: 0, Железо: 0", (0, 0, 0), (110, 205))
+            if alchemistry > 0:
+                game.draw_button(90, 50, 100, 330, "Шахта", "mine")
+                game.print_text(20, "Деревo: 15, Руда: 0, Железо: 0", (0, 0, 0), (110, 305))
+            if alchemistry > 1:
+                game.draw_button(90, 50, 100, 430, "Кузня", "smithy")
+                game.print_text(20, "Деревo: 20, Руда: 10, Железо: 0", (0, 0, 0), (110, 405))
 
     def off_sondtrack(self):
         pygame.mixer.music.pause()
@@ -354,7 +377,7 @@ clock = pygame.time.Clock()
 
 while running:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT or game.return_exit():
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             game.click()
