@@ -23,6 +23,7 @@ class Board:
         self.house_place_player2 = 0
         self.cords_for_sawmill = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         self.alchemistry_cost = [(10, 0, 0), (15, 10, -0), (20, 15, 10), "1Беги!!!1"]
+        self.warriors_cost = {"swordsman": (10, 0, 7)}
 
     def get_player(self):
         if self.motion == 1:
@@ -120,8 +121,12 @@ class Board:
 
     def up_alchemistry(self):
         if self.motion == 1:
+            for i in range(3):
+                self.player1[i] -= self.alchemistry_cost[self.alchemistry_stage_player1][i]
             self.alchemistry_stage_player1 += 1
         else:
+            for i in range(3):
+                self.player2[i] -= self.alchemistry_cost[self.alchemistry_stage_player2][i]
             self.alchemistry_stage_player2 += 1
 
     def cost_construction(self, build):
@@ -132,8 +137,6 @@ class Board:
             for i in range(len(build)):
                 self.player2[i] -= build[i]
 
-    def get_alchemistry_cost(self):
-        return self.alchemistry_cost
 
 class Game:
     def __init__(self):
@@ -153,6 +156,7 @@ class Game:
                          "mine": [19, 15, 0, 0], "smithy": [20, 20, 10, 0]}
         self.settings = {"on_music": self.on_soundtrack, "off_music": self.off_sondtrack, "on_sounds": self.on_sounds,
                          "off_sounds": self.off_sounds}
+        self.build_warriors = {"swordsman": self.build_swordsman}
         self.active_clr = (204, 229, 255)
         self.is_construction_window = False
         self.selection_cell = (0, 0)
@@ -175,6 +179,8 @@ class Game:
         self.is_alchemistry_window = False
 
     def up_alchemistry(self):
+        if self.is_sounds:
+            pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds/up_alchemistry.mp3'))
         self.board.up_alchemistry()
 
     def click(self):
@@ -224,8 +230,10 @@ class Game:
                     self.settings[stage]()
                 if stage in self.actions_in_the_game:
                     self.actions_in_the_game[stage]()
+                if stage in self.build_warriors:
+                    self.build_warriors[stage]()
 
-        self.print_text(font_size, message, (0, 0, 0), (x + 5, y + 5))
+        self.print_text(font_size, message, (x + 5, y + 5))
 
     def return_action_stage(self):
         return self.action_stage
@@ -242,7 +250,7 @@ class Game:
         lst_player = self.board.get_player()
         for i in range(3):
             pygame.draw.rect(screen, self.active_clr, (x, y, 250, 50))
-            self.print_text(40, self.resources[i] + str(lst_player[i]), (0, 0, 0), (x, y))
+            self.print_text(40, self.resources[i] + str(lst_player[i]), (x, y))
             x += 300
 
         if self.is_construction_window:
@@ -271,9 +279,9 @@ class Game:
         self.render_button(135, 55, 250, 80, "1 VS 1", "map_VS", font_size=45)
         self.render_button(135, 55, 890, 80, "Waves", font_size=45)
         self.render_button(170, 55, 1500, 80, "Invasion", font_size=45)
-        self.print_text(30, "В разработке", (0, 0, 0), (110, 200))
-        self.print_text(30, "В разработке", (0, 0, 0), (740, 200))
-        self.print_text(30, "В разработке", (0, 0, 0), (1370, 200))
+        self.print_text(30, "В разработке", (110, 200))
+        self.print_text(30, "В разработке", (740, 200))
+        self.print_text(30, "В разработке", (1370, 200))
 
     def render_home_screen(self):
         screen.blit(main_screen, (0, 0))
@@ -283,7 +291,7 @@ class Game:
         self.render_button(250, 45, 850, 500, "Настройки", "settings")
         self.render_button(250, 45, 850, 550, "Выход", "exit")
 
-    def print_text(self, size, message, color, location, fnt='serif'):
+    def print_text(self, size, message, location, color=(0, 0, 0), fnt='serif'):
         screen.blit(pygame.font.SysFont(fnt, size).render(message, True, color), location)
 
     def render_construction_window(self, pos):
@@ -301,17 +309,17 @@ class Game:
                 screen.blit(pygame.image.load(self.lst_textures[i]), (20, 20 + cout))
                 cout += 100
             self.render_button(70, 50, 100, 30, "Дом", "house")
-            self.print_text(20, "Деревo: 20, Руда: 0, Железо: 5", (0, 0, 0), (110, 5))
+            self.print_text(20, "Деревo: 20, Руда: 0, Железо: 5", (110, 5))
             self.render_button(150, 50, 100, 130, "Лесопилка", "sawmill")
-            self.print_text(20, "Деревo: 5, Руда: 0, Железо: 0", (0, 0, 0), (110, 105))
+            self.print_text(20, "Деревo: 5, Руда: 0, Железо: 0", (110, 105))
             self.render_button(290, 50, 100, 230, "Алхимическая платка", "alchemistry")
-            self.print_text(20, "Деревo: 10, Руда: 0, Железо: 0", (0, 0, 0), (110, 205))
+            self.print_text(20, "Деревo: 10, Руда: 0, Железо: 0", (110, 205))
             if alchemistry > 0:
                 self.render_button(90, 50, 100, 330, "Шахта", "mine")
-                self.print_text(20, "Деревo: 15, Руда: 0, Железо: 0", (0, 0, 0), (110, 305))
+                self.print_text(20, "Деревo: 15, Руда: 0, Железо: 0", (110, 305))
             if alchemistry > 1:
                 self.render_button(90, 50, 100, 430, "Кузня", "smithy")
-                self.print_text(20, "Деревo: 20, Руда: 10, Железо: 0", (0, 0, 0), (110, 405))
+                self.print_text(20, "Деревo: 20, Руда: 10, Железо: 0", (110, 405))
 
     def off_sondtrack(self):
         pygame.mixer.music.pause()
@@ -357,18 +365,23 @@ class Game:
         if self.board.get_alchemistry_stage() != 3:
             screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (self.alchemistry_pos[0] * 60 - 120, self.alchemistry_pos[1] * 60 - 120))
             self.render_button(120, 35, self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 - 40, "Улучшить", "up_alchemistry", font_size=25)
-            self.print_text(25, "Стоимость:", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60))
-            self.print_text(25, "Уровень: " + str(self.board.get_alchemistry_stage()), (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 + 80))
-            self.print_text(25, str(self.board.get_alchemistry_cost()[self.board.get_alchemistry_stage()])[1:-1], (0, 0, 0), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 + 40))
+            self.print_text(25, "Стоимость:", (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60))
+            self.print_text(25, "Уровень: " + str(self.board.get_alchemistry_stage()), (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 + 80))
+            self.print_text(25, str(self.board.alchemistry_cost[self.board.get_alchemistry_stage()])[1:-1], (self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 + 40))
         else:
             screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (self.alchemistry_pos[0] * 60 - 120, self.alchemistry_pos[1] * 60 - 120))
-            self.print_text(25, "Максимальный", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 50, self.alchemistry_pos[1] * 60 - 40))
-            self.print_text(25, "уровень", (0, 0, 0), (self.alchemistry_pos[0] * 60 - 50, self.alchemistry_pos[1] * 60))
+            self.print_text(25, "Максимальный", (self.alchemistry_pos[0] * 60 - 50, self.alchemistry_pos[1] * 60 - 40))
+            self.print_text(25, "уровень", (self.alchemistry_pos[0] * 60 - 50, self.alchemistry_pos[1] * 60))
         self.render_button(100, 35, self.alchemistry_pos[0] * 60 - 40, self.alchemistry_pos[1] * 60 + 120, "Выход", "exit_alchemistry", font_size=25)
 
     def render_smithy_window(self):
         if self.board.get_alchemistry_stage() == 3:
             screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (self.smithy_pos[0] * 60 - 120, self.smithy_pos[1] * 60 - 120))
+            self.render_button(120, 35, self.smithy_pos[0] * 60 - 40, self.smithy_pos[1] * 60 - 50, "Мечник", "swordsman", font_size=25)
+            self.print_text(25, "Цена: " + str(self.board.warriors_cost["swordsman"])[1:-1], (self.smithy_pos[0] * 60 - 40, self.smithy_pos[1] * 60 - 10))
+
+    def build_swordsman(self):
+        self.is_smithy_window = False # В начале должна запуститься функция в бэк енде на просчёт цены постройки или улутшения, а она в свою очередь должна как-то отнимать у игрока ресурсы
 
 
 def load_map():
@@ -398,6 +411,7 @@ pygame.display.set_icon(pygame.image.load("textures\icon.png"))
 game = Game()
 pygame.mixer.music.load("sounds\soundtrack.mp3")
 pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(0.2)
 fps = 60
 clock = pygame.time.Clock()
 while running:
