@@ -9,10 +9,10 @@ class Board:
                     self.location_my_castle = (j, i)
                 if map[i][j] == 3:
                     self.location_bot_castle = (j, i)
-        self.player1 = [100, 100, 100]
+        self.player1 = [10000, 10000, 10000]
         self.builds_player1 = []
         self.edifice_player1 = []
-        self.player2 = [10, 0, 0]
+        self.player2 = [10, 11111, 11111]
         self.builds_player2 = []
         self.edifice_player2 = []
         self.motion = 1
@@ -26,6 +26,7 @@ class Board:
         self.cords_for_sawmill = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         self.alchemistry_cost = [(10, 0, 0), (15, 10, -0), (20, 15, 10), "1Беги!!!1"]
         self.warriors_cost = {"swordsman": (10, 0, 7)}
+        self.castle_cost = [(25, 0, 0), (50, 0, 10), (100, 0, 30)]
 
     def get_player(self):
         if self.motion == 1:
@@ -188,7 +189,17 @@ class Game:
         self.board.up_castle()
 
     def up_alchemistry(self):
-        if True:
+        if self.board.motion == 1:
+            resurs = self.board.player1
+            stage = self.board.alchemistry_stage_player1
+        else:
+            resurs = self.board.player2
+            stage = self.board.alchemistry_stage_player2
+        is_ok = True
+        for i in range(3):
+            if resurs[i] - self.board.alchemistry_cost[stage][i] < 0:
+                is_ok = False
+        if is_ok:
             if self.is_sounds:
                 pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds/up_alchemistry.mp3'))
             self.board.up_alchemistry()
