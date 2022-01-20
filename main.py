@@ -41,33 +41,31 @@ class Board:
     def course_change(self):
         if game.return_action_stage() == "map_VS":
             if self.motion == 1:
+                builds_player = self.builds_player2
+                edifice_player = self.edifice_player2
+            else:
+                builds_player = self.builds_player1
+                edifice_player = self.edifice_player1
+            i = 0
+            while i < len(builds_player):
+                if builds_player[i][1] > 0:
+                    builds_player[i][1] -= 1
+                if builds_player[i][1] == 0:
+                    map[builds_player[i][2][1]][builds_player[i][2][0]] = builds_player[i][0]
+                    edifice_player.append([builds_player[i][0], (builds_player[i][-1])])
+                    builds_player[i], builds_player[-1] = builds_player[-1], builds_player[i]
+                    builds_player.pop()
+                i += 1
+            for elem in edifice_player:
+                self.edifice_functions[elem[0] % 16](elem[-1])
+            if self.motion == 1:
                 self.motion = 2
-                i = 0
-                while i < len(self.builds_player2):
-                    if self.builds_player2[i][1] > 0:
-                        self.builds_player2[i][1] -= 1
-                    if self.builds_player2[i][1] == 0:
-                        map[self.builds_player2[i][2][1]][self.builds_player2[i][2][0]] = self.builds_player2[i][0]
-                        self.edifice_player2.append([self.builds_player2[i][0], (self.builds_player2[i][-1])])
-                        self.builds_player2[i], self.builds_player2[-1] = self.builds_player2[-1], self.builds_player2[i]
-                        self.builds_player2.pop()
-                    i += 1
-                for elem in self.edifice_player2:
-                    self.edifice_functions[elem[0] % 16](elem[-1])
+                self.builds_player2 = builds_player
+                self.edifice_player2 = edifice_player
             else:
                 self.motion = 1
-                i = 0
-                while i < len(self.builds_player1):
-                    if self.builds_player1[i][1] > 0:
-                        self.builds_player1[i][1] -= 1
-                    if self.builds_player1[i][1] == 0:
-                        map[self.builds_player1[i][2][1]][self.builds_player1[i][2][0]] = self.builds_player1[i][0]
-                        self.edifice_player1.append([self.builds_player1[i][0], (self.builds_player1[i][-1])])
-                        self.builds_player1[i], self.builds_player1[-1] = self.builds_player1[-1], self.builds_player1[i]
-                        self.builds_player1.pop()
-                    i += 1
-                for elem in self.edifice_player1:
-                    self.edifice_functions[elem[0] % 16](elem[-1])
+                self.builds_player1 = builds_player
+                self.edifice_player1 = edifice_player
 
     def build(self, what_build):
         if self.motion == 1:
@@ -100,15 +98,18 @@ class Board:
 
     def smithy(self, pos):
         if self.motion == 1:
-            if self.player1[1] >= 2 and self.player1[0] >= 2:
-                self.player1[1] -= 2
-                self.player1[0] -= 2
-                self.player1[2] += 1
+            player = self.player2
         else:
-            if self.player2[1] >= 2 and self.player2[0] >= 2:
-                self.player2[1] -= 2
-                self.player2[0] -= 2
-                self.player2[2] += 1
+            player = self.player1
+        print(player)
+        if player[1] >= 2 and player[0] >= 2:
+            player[1] -= 2
+            player[0] -= 2
+            player[2] += 1
+        if self.motion == 1:
+            self.player2 = player
+        else:
+            self.player1 = player
 
     def alchemistry(self, pos):
         pass
@@ -124,21 +125,32 @@ class Board:
 
     def up_alchemistry(self):
         if self.motion == 1:
-            for i in range(3):
-                self.player1[i] -= self.alchemistry_cost[self.alchemistry_stage_player1][i]
+            player = self.player1
+            alchemistry_stage = self.alchemistry_stage_player1
+        else:
+            player = self.player2
+            alchemistry_stage = self.alchemistry_stage_player2
+        for i in range(3):
+            player[i] -= self.alchemistry_cost[alchemistry_stage][i]
+        alchemistry_stage += 1
+        if self.motion == 1:
+            self.player1 = player
             self.alchemistry_stage_player1 += 1
         else:
-            for i in range(3):
-                self.player2[i] -= self.alchemistry_cost[self.alchemistry_stage_player2][i]
+            self.player2 = player
             self.alchemistry_stage_player2 += 1
 
     def cost_construction(self, build):
         if self.motion == 1:
-            for i in range(len(build)):
-                self.player1[i] -= build[i]
+            player = self.player1
         else:
-            for i in range(len(build)):
-                self.player2[i] -= build[i]
+            player = self.player2
+        for i in range(len(build)):
+            player[i] -= build[i]
+        if self.motion == 1:
+            self.player1 = player
+        else:
+            self.player2 = player
 
     def up_castle(self):
         pass
@@ -461,3 +473,6 @@ while running:
     clock.tick(fps)
 
     pygame.display.flip()
+"""идея: как исправить прокликивание, кнопки в игре будут нашжиматься а левую кнопку мыша, а всё остальное на правую"""
+"""А так же нужно подчистить класс боард от копипаста"""
+"""В игре есть две фичи: После улутшения чего либо окно строительства не открывается; Алхимическую палатку одного игрока может открыть другой игрок и та улутшиться"""
