@@ -27,6 +27,8 @@ class Board:
         self.alchemistry_cost = [(10, 0, 0), (15, 10, -0), (20, 15, 10), "1Беги!!!1"]
         self.warriors_cost = {"swordsman": (10, 0, 7)}
         self.castle_cost = [(25, 0, 0), (50, 0, 10), (100, 0, 30), "1Беги!!!1"]
+        self.square_castle = [1, 2, 3, 4]
+        self.selection_cell = (0, 0)
 
     def get_player(self):
         if self.motion == 1:
@@ -34,12 +36,8 @@ class Board:
         else:
             return self.player2
 
-    def get_cell(self):
-        mouse = pygame.mouse.get_pos()
-        return mouse[0] // 60, mouse[1] // 60
-
-    def course_change(self):
-        if game.return_action_stage() == "map_VS":
+    def course_change(self, stage):
+        if stage == "map_VS":
             if self.motion == 1:
                 builds_player = self.builds_player2
                 edifice_player = self.edifice_player2
@@ -67,31 +65,30 @@ class Board:
                 self.builds_player1 = builds_player
                 self.edifice_player1 = edifice_player
 
-    def build(self, what_build):
+    def build(self, what_build, cell):
         if self.motion == 1:
-            self.builds_player1.append([what_build, self.get_how_build(), game.get_pos()])
+            self.builds_player1.append([what_build, self.get_how_build(), cell])
         else:
-            self.builds_player2.append([what_build, self.get_how_build(), game.get_pos()])
+            self.builds_player2.append([what_build, self.get_how_build(), cell])
 
     def get_how_build(self):
-        pos = game.get_pos()
         if self.motion == 2:
-            return max(abs(self.location_bot_castle[0] - pos[0]), abs(self.location_bot_castle[1] - pos[1]))
+            return max(abs(self.location_bot_castle[0] - self.selection_cell[0]), abs(self.location_bot_castle[1] - self.selection_cell[1]))
         else:
-            return max(abs(self.location_my_castle[0] - pos[0]), abs(self.location_my_castle[1] - pos[1]))
+            return max(abs(self.location_my_castle[0] - self.selection_cell[0]), abs(self.location_my_castle[1] - self.selection_cell[1]))
 
     def sawmill(self, pos):
         cout_wood = 0
         for elem in self.cords_for_sawmill:
             if map[pos[1] + elem[1]][pos[0] + elem[0]] == 1:
                 cout_wood += 1
-        if self.motion == 1:
+        if self.motion == 2:
             self.player1[0] += cout_wood
         else:
             self.player2[0] += cout_wood
 
     def mine(self, pos):
-        if self.motion == 1:
+        if self.motion == 2:
             self.player1[1] += 1
         else:
             self.player2[1] += 1
@@ -202,7 +199,6 @@ class Game:
         self.build_warriors = {"swordsman": self.build_swordsman}
         self.active_clr = (204, 229, 255)
         self.is_construction_window = False
-        self.selection_cell = (0, 0)
         self.is_alchemistry_window = False
         self.is_sounds = True
         self.is_esc = False
@@ -210,6 +206,10 @@ class Game:
         self.is_smithy_window = False
         self.board = Board()
         self.is_castle_window = False
+
+    def get_cell(self):
+        mouse = pygame.mouse.get_pos()
+        return mouse[0] // 60, mouse[1] // 60
 
     def off_castle_window(self):
         self.is_castle_window = False
@@ -246,17 +246,25 @@ class Game:
 
     def click(self):
         if self.return_action_stage() == "map_VS":
+            self.board.selection_cell = self.get_cell()
             if not self.is_construction_window:
-                self.selection_cell = self.board.get_cell()
-                self.is_construction_window = True
+                is_ok = True
+                if self.board.motion == 1:
+                    if self.board.get_how_build() <= self.board.square_castle[self.board.castle_stage_player1]:
+                        is_ok = True
+                else:
+                    if self.board.get_how_build() <= self.board.square_castle[self.board.castle_stage_player2]:
+                        is_ok = True
+                if is_ok:
+                    self.is_construction_window = True
             elif pygame.mouse.get_pos()[0] > 380 or pygame.mouse.get_pos()[1] > 490:
                 self.is_construction_window = False
-            pos = self.board.get_cell()
+            pos = self.get_cell()
             if map[pos[1]][pos[0]] == 18 and not self.is_alchemistry_window:
-                self.alchemistry_pos = self.board.get_cell()
+                self.alchemistry_pos = self.get_cell()
                 self.is_alchemistry_window = True
             if map[pos[1]][pos[0]] == 20 and not self.is_smithy_window:
-                self.smithy_pos = self.board.get_cell()
+                self.smithy_pos = self.get_cell()
                 self.is_smithy_window = True
             if map[pos[1]][pos[0]] == 2 and self.board.motion == 1:
                 self.castle_pos = self.board.location_my_castle
@@ -320,7 +328,7 @@ class Game:
             x += 300
 
         if self.is_construction_window:
-            self.render_construction_window(self.selection_cell)
+            self.render_construction_window(self.board.selection_cell)
         if self.is_alchemistry_window:
             self.render_alchemistry_window()
         if self.is_smithy_window:
@@ -397,11 +405,8 @@ class Game:
 
     def render_build(self, what_build):
         self.is_construction_window = False
-        map[self.selection_cell[1]][self.selection_cell[0]] = 21
-        self.board.build(what_build)
-
-    def get_pos(self):
-        return self.selection_cell
+        map[self.board.selection_cell[1]][self.board.selection_cell[0]] = 21
+        self.board.build(what_build, self.board.selection_cell)
 
     def render_settings_window(self):
         screen.blit(main_screen, (0, 0))
@@ -428,7 +433,7 @@ class Game:
                 self.is_esc = True
 
     def course_change(self):
-        self.board.course_change()
+        self.board.course_change(game.return_action_stage())
 
     def render_alchemistry_window(self):
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 365))
@@ -501,8 +506,9 @@ while running:
         if event.type == pygame.QUIT or game.exit:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN and not is_click:
-            is_click = True
-            game.click()
+            if event.button == 3:
+                is_click = True
+                game.click()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 game.course_change()
@@ -510,7 +516,6 @@ while running:
                game.click_esc()
     game.render()
     clock.tick(fps)
-
     pygame.display.flip()
 """идея: как исправить прокликивание, кнопки в игре будут нашжиматься а левую кнопку мыша, а всё остальное на правую"""
 """В игре есть две фичи: После улутшения чего либо окно строительства не открывается; Алхимическую палатку одного игрока может открыть другой игрок и та улутшиться"""
