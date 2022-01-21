@@ -191,6 +191,7 @@ class Game:
         self.actions_in_the_game = {"up_alchemistry": self.up_alchemistry, "exit_alchemistry": self.off_alchemistry_window,
                                     'exit': self.exit, "up_castle": self.up_castle, "exit_smithy": self.off_smithy_window,
                                     "exit_castle": self.off_castle_window}
+        self.past_action_stage = "main_menu"
         self.action_stage = "main_menu"
         self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
                     "map_VS": self.render_map_VS, "settings": self.render_settings_window}
@@ -248,7 +249,7 @@ class Game:
             if not self.is_construction_window:
                 self.selection_cell = self.board.get_cell()
                 self.is_construction_window = True
-            elif pygame.mouse.get_pos()[0] > 400:
+            elif pygame.mouse.get_pos()[0] > 380 or pygame.mouse.get_pos()[1] > 450:
                 self.is_construction_window = False
             pos = self.board.get_cell()
             if map[pos[1]][pos[0]] == 18 and not self.is_alchemistry_window:
@@ -269,10 +270,9 @@ class Game:
         if self.is_esc and self.action_stage != "main_menu":
             self.render_esc_window()
 
-    def render_button(self, width, height, x, y, message, stage="None", font_size=30): # Кнопки живут своей жизнью, лутне все клики запихнуть в функцию click
+    def render_button(self, width, height, x, y, message, stage="None", font_size=30):
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
-
         if x < mouse[0] < x + width and y < mouse[1] < y + height:
             pygame.draw.rect(screen, self.active_clr, (x, y, width, height))
             if click[0] == 1:
@@ -280,6 +280,7 @@ class Game:
                     pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds\button_click.wav'))
                 pygame.time.delay(150)
                 if stage in self.render_functions:
+                    self.past_action_stage = self.action_stage
                     self.action_stage = stage
                 if stage in self.building:
                     is_building = True
@@ -405,7 +406,8 @@ class Game:
     def render_settings_window(self):
         screen.blit(main_screen, (0, 0))
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (580, 600)), (680, 150))
-        self.render_button(240, 50, 850, 260, "Продолжить игру", "map_VS") # нет условия на отрисовку этой кнопки!!!
+        if self.past_action_stage == "map_VS":
+            self.render_button(240, 50, 850, 260, "Продолжить игру", "map_VS")
         self.render_button(240, 50, 850, 320, "Главное меню", "main_menu")
         self.render_button(260, 50, 850, 380, "Отключить музыку", "off_music")
         self.render_button(240, 50, 850, 440, "Включить музыку", "on_music")
@@ -511,5 +513,4 @@ while running:
 
     pygame.display.flip()
 """идея: как исправить прокликивание, кнопки в игре будут нашжиматься а левую кнопку мыша, а всё остальное на правую"""
-"""А так же нужно подчистить класс боард от копипаста"""
 """В игре есть две фичи: После улутшения чего либо окно строительства не открывается; Алхимическую палатку одного игрока может открыть другой игрок и та улутшиться"""
