@@ -26,7 +26,7 @@ class Board:
         self.cords_for_sawmill = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         self.alchemistry_cost = [(10, 0, 0), (15, 10, -0), (20, 15, 10), "1Беги!!!1"]
         self.warriors_cost = {"swordsman": (10, 0, 7)}
-        self.castle_cost = [(25, 0, 0), (50, 0, 10), (100, 0, 30)]
+        self.castle_cost = [(25, 0, 0), (50, 0, 10), (100, 0, 30), "1Беги!!!1"]
 
     def get_player(self):
         if self.motion == 1:
@@ -151,8 +151,32 @@ class Board:
         else:
             self.player2 = player
 
+    def get_castle_stage(self):
+        if self.motion == 1:
+            return self.castle_stage_player1
+        else:
+            return self.castle_stage_player2
+
     def up_castle(self):
-        pass
+        if self.motion == 1:
+            player = self.player1
+            stage = self.castle_stage_player1
+        else:
+            player = self.player2
+            stage = self.castle_stage_player2
+        is_ok = True
+        for i in range(3):
+            if player[i] < self.castle_cost[stage][i]:
+                is_ok = False
+        if is_ok:
+            for i in range(3):
+                player[i] -= self.castle_cost[stage][i]
+        if self.motion == 1:
+            self.player1 = player
+            self.castle_stage_player1 += 1
+        else:
+            self.player2 = player
+            self.castle_stage_player2 += 1
 
 
 class Game:
@@ -165,7 +189,8 @@ class Game:
                 "textures\\alchemistry.png", "textures\mine.png", "textures\smithy.png", "textures\\byilding_table.png"]
         self.resources = ["Дерево: ", "Руда: ", "Слитки: "]
         self.actions_in_the_game = {"up_alchemistry": self.up_alchemistry, "exit_alchemistry": self.off_alchemistry_window,
-                                    'exit': self.exit, "up_castle": self.up_castle, "exit_smithy": self.off_smithy_window}
+                                    'exit': self.exit, "up_castle": self.up_castle, "exit_smithy": self.off_smithy_window,
+                                    "exit_castle": self.off_castle_window}
         self.action_stage = "main_menu"
         self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
                     "map_VS": self.render_map_VS, "settings": self.render_settings_window}
@@ -183,6 +208,9 @@ class Game:
         self.exit = False
         self.is_smithy_window = False
         self.board = Board()
+        self.is_castle_window = False
+
+    def off_castle_window(self):
         self.is_castle_window = False
 
     def off_smithy_window(self):
@@ -231,6 +259,9 @@ class Game:
                 self.is_smithy_window = True
             if map[pos[1]][pos[0]] == 2 and self.board.motion == 1:
                 self.castle_pos = self.board.location_my_castle
+                self.is_castle_window = True
+            if map[pos[1]][pos[0]] == 3 and self.board.motion == 2:
+                self.castle_pos = self.board.location_bot_castle
                 self.is_castle_window = True
 
     def render(self):
@@ -398,14 +429,13 @@ class Game:
         self.board.course_change()
 
     def render_alchemistry_window(self):
+        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 365))
         if self.board.get_alchemistry_stage() != 3:
-            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 365))
             self.render_button(120, 35, 890, 445, "Улучшить", "up_alchemistry", font_size=25)
             self.print_text(25, "Стоимость:", (890, 485))
             self.print_text(25, "Уровень: " + str(self.board.get_alchemistry_stage()), (890, 565))
             self.print_text(25, str(self.board.alchemistry_cost[self.board.get_alchemistry_stage()])[1:-1], (890, 525))
         else:
-            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 365))
             self.print_text(25, "Максимальный", (880, 445))
             self.print_text(25, "уровень", (880, 485))
         self.render_button(100, 35, 890, 605, "Выход", "exit_alchemistry", font_size=25)
@@ -419,7 +449,15 @@ class Game:
 
     def render_castle_window(self):
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 365))
-        self.render_button(120, 35, 890, 435, "Улутшить", "up_castle", font_size=25)
+        if self.board.get_castle_stage() < 3:
+            self.render_button(120, 35, 880, 435, "Улутшить", "up_castle", font_size=25)
+            self.print_text(25, "Стоимость:", (885, 470))
+            self.print_text(25, str(self.board.castle_cost[self.board.get_castle_stage()])[1:-1], (885, 505))
+            self.print_text(25, "Уровень: " + str(self.board.get_castle_stage()), (885, 540))
+        else:
+            self.print_text(25, "Максимальный", (885, 445))
+            self.print_text(25, "уровень", (885, 485))
+        self.render_button(120, 35, 880, 575, "Выход", "exit_castle", font_size=25)
 
     def build_swordsman(self):
         self.off_smithy_window() # В начале должна запуститься функция в бэк енде на просчёт цены постройки или улутшения, а она в свою очередь должна как-то отнимать у игрока ресурсы
@@ -453,7 +491,7 @@ game = Game()
 pygame.mixer.music.load("sounds\soundtrack.mp3")
 pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(0.2)
-fps = 60
+fps = 30
 clock = pygame.time.Clock()
 while running:
     is_click = False
