@@ -249,7 +249,7 @@ class Game:
             if not self.is_construction_window:
                 self.selection_cell = self.board.get_cell()
                 self.is_construction_window = True
-            elif pygame.mouse.get_pos()[0] > 380 or pygame.mouse.get_pos()[1] > 450:
+            elif pygame.mouse.get_pos()[0] > 380 or pygame.mouse.get_pos()[1] > 490:
                 self.is_construction_window = False
             pos = self.board.get_cell()
             if map[pos[1]][pos[0]] == 18 and not self.is_alchemistry_window:
