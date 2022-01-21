@@ -376,7 +376,7 @@ class Game:
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (580, 600)), (680, 150))
         self.render_button(240, 50, 850, 260, "Продолжить игру", "map_VS") # нет условия на отрисовку этой кнопки!!!
         self.render_button(240, 50, 850, 320, "Главное меню", "main_menu")
-        self.render_button(240, 50, 850, 380, "Отключить музыку", "off_music")
+        self.render_button(260, 50, 850, 380, "Отключить музыку", "off_music")
         self.render_button(240, 50, 850, 440, "Включить музыку", "on_music")
         self.render_button(240, 50, 850, 500, "Отключить звук", "off_sounds")
         self.render_button(240, 50, 850, 560, "Включить звук", "on_sounds")
