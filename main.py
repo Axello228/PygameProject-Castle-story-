@@ -101,7 +101,6 @@ class Board:
             player = self.player2
         else:
             player = self.player1
-        print(player)
         if player[1] >= 2 and player[0] >= 2:
             player[1] -= 2
             player[0] -= 2
