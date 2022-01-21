@@ -457,7 +457,7 @@ class Game:
     def render_castle_window(self):
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 365))
         if self.board.get_castle_stage() < 3:
-            self.render_button(120, 35, 880, 435, "Улутшить", "up_castle", font_size=25)
+            self.render_button(120, 35, 880, 435, "Улучшить", "up_castle", font_size=25)
             self.print_text(25, "Стоимость:", (885, 470))
             self.print_text(25, str(self.board.castle_cost[self.board.get_castle_stage()])[1:-1], (885, 505))
             self.print_text(25, "Уровень: " + str(self.board.get_castle_stage()), (885, 540))
@@ -517,5 +517,4 @@ while running:
     game.render()
     clock.tick(fps)
     pygame.display.flip()
-"""идея: как исправить прокликивание, кнопки в игре будут нашжиматься а левую кнопку мыша, а всё остальное на правую"""
-"""В игре есть две фичи: После улутшения чего либо окно строительства не открывается; Алхимическую палатку одного игрока может открыть другой игрок и та улутшиться"""
+"""В игре есть две фичи: После улутшения чего либо окно строительства открывается после Второго клика; Алхимическую палатку одного игрока может открыть другой игрок и та улутшиться"""
