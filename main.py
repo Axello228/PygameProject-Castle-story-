@@ -31,6 +31,7 @@ class Board:
         self.selection_cell = (0, 0)
         self.army_player1 = []
         self.army_player2 = []
+        self.move_swordsman = [(1, 0), (0, 1), (1, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]
 
     def get_player(self):
         if self.motion == 1:
@@ -184,25 +185,32 @@ class Board:
             self.castle_stage_player2 += 1
 
     def build_swordsman(self):
-        if self.motion == 1:
+        pos = player = 0
+        if self.motion == 1 and map[self.location_my_castle[1] + 1][self.location_my_castle[0]] == 0:
             player = self.player1
-        else:
+            is_ok = True
+            pos = self.location_my_castle
+        elif map[self.location_bot_castle[1] + 1][self.location_bot_castle[0]] == 0 and self.motion == 2:
             player = self.player2
-        is_ok = True
-        for i in range(3):
-            if player[i] < self.warriors_cost["swordsman"][i]:
-                is_ok = False
+            is_ok = True
+            pos = self.location_bot_castle
+        else:
+            is_ok = False
         if is_ok:
             for i in range(3):
-                player[i] -= self.warriors_cost["swordsman"][i]
-        if self.motion == 1:
-            self.player1 = player
-            self.army_player1.append(Swordsman())
-        else:
-            self.player2 = player
-            self.army_player2.append(Swordsman())
-
-
+                if player[i] < self.warriors_cost["swordsman"][i]:
+                    is_ok = False
+            if is_ok:
+                for i in range(3):
+                    player[i] -= self.warriors_cost["swordsman"][i]
+            if self.motion == 1:
+                self.player1 = player
+                self.army_player1.append(Swordsman(pos))
+                map[pos[1] + 1][pos[0]] = 14
+            else:
+                self.player2 = player
+                self.army_player2.append(Swordsman(pos))
+                map[pos[1] + 1][pos[0]] = 13
 
 
 class Game:
@@ -235,6 +243,8 @@ class Game:
         self.is_smithy_window = False
         self.board = Board()
         self.is_castle_window = False
+        self.past_selection_cell = self.board.selection_cell
+        self.pos = (0, 0)
 
     def get_cell(self):
         mouse = pygame.mouse.get_pos()
@@ -288,19 +298,33 @@ class Game:
                     self.is_construction_window = True
             elif pygame.mouse.get_pos()[0] > 380 or pygame.mouse.get_pos()[1] > 490:
                 self.is_construction_window = False
-            pos = self.get_cell()
-            if map[pos[1]][pos[0]] == 18 and not self.is_alchemistry_window:
+            self.past_pos = self.pos
+            self.pos = self.get_cell()
+            if map[self.pos[1]][self.pos[0]] == 18 and not self.is_alchemistry_window:
                 self.alchemistry_pos = self.get_cell()
                 self.is_alchemistry_window = True
-            if map[pos[1]][pos[0]] == 20 and not self.is_smithy_window:
+            if map[self.pos[1]][self.pos[0]] == 20 and not self.is_smithy_window:
                 self.smithy_pos = self.get_cell()
                 self.is_smithy_window = True
-            if map[pos[1]][pos[0]] == 2 and self.board.motion == 1:
+            if map[self.pos[1]][self.pos[0]] == 2 and self.board.motion == 1:
                 self.castle_pos = self.board.location_my_castle
                 self.is_castle_window = True
-            if map[pos[1]][pos[0]] == 3 and self.board.motion == 2:
+            if map[self.pos[1]][self.pos[0]] == 3 and self.board.motion == 2:
                 self.castle_pos = self.board.location_bot_castle
                 self.is_castle_window = True
+            if map[self.past_pos[1]][self.past_pos[0]] == 14 and self.board.motion == 1 or map[self.past_pos[1]][self.past_pos[0]] == 13 and self.board.motion == 2:
+                if self.board.motion == 1:
+                    army = self.board.army_player1
+                else:
+                    army = self.board.army_player2
+                for warior in army:
+                    if warior.pos == self.past_pos and warior.go:
+                        is_move = False
+                        for pos in self.board.move_swordsman:
+                            if self.past_pos[0] + pos[0] == self.pos[0] and self.past_pos[1] + pos[1] == self.pos[1]:
+                                is_move = True
+                        if map[self.pos[1]][self.pos[0]] == 0 and is_move:
+                            warior.move(self.pos, self.past_pos)
 
     def render(self):
         self.render_functions[self.action_stage]()
@@ -355,7 +379,8 @@ class Game:
             pygame.draw.rect(screen, self.active_clr, (x, y, 250, 50))
             self.print_text(40, self.resources[i] + str(lst_player[i]), (x, y))
             x += 300
-
+        pygame.draw.rect(screen, self.active_clr, (x + 100, y, 270, 50))
+        game.print_text(40 , "Ход игрока №" + str(self.board.motion), (x + 100, y))
         if self.is_construction_window:
             self.render_construction_window(self.board.selection_cell)
         if self.is_alchemistry_window:
@@ -501,13 +526,24 @@ class Game:
 
 
 class Swordsman:
-    def __init__(self):
-        self.pos = (0, 0)
+    def __init__(self, pos):
+        self.pos = (pos[0], pos[1] + 1)
         self.health = 15
         self.damage = 10
         self.go = True
         self.direction = True
+        self.hit_or_treatment = True
 
+    def move(self, pos, past_pos):
+        map[pos[1]][pos[0]], map[past_pos[1]][past_pos[0]] = map[past_pos[1]][past_pos[0]], map[pos[1]][pos[0]]
+        self.pos = pos
+        self.go = False
+
+    def hit(self):
+        pass
+
+    def treatment(self):
+        pass
 
 def load_map():
     file = open("maps/the_isle", encoding="utf8", mode="r")
@@ -522,7 +558,6 @@ def load_map():
         for j in range(32):
             map[i][j] = int(map[i][j])
     return map
-
 
 map = load_map()
 main_screen = pygame.transform.scale(pygame.image.load(r"textures\background.jpg"), (1920, 1080))
