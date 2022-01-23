@@ -9,10 +9,10 @@ class Board:
                     self.location_my_castle = (j, i)
                 if map[i][j] == 3:
                     self.location_bot_castle = (j, i)
-        self.player1 = [10000, 10000, 10000]
+        self.player1 = [1000, 1000, 1000]
         self.builds_player1 = []
         self.edifice_player1 = []
-        self.player2 = [10, 11111, 11111]
+        self.player2 = [10, 0, 0]
         self.builds_player2 = []
         self.edifice_player2 = []
         self.motion = 1
@@ -29,6 +29,8 @@ class Board:
         self.castle_cost = [(25, 0, 0), (50, 0, 10), (100, 0, 30), "1Беги!!!1"]
         self.square_castle = [1, 2, 3, 4]
         self.selection_cell = (0, 0)
+        self.army_player1 = []
+        self.army_player2 = []
 
     def get_player(self):
         if self.motion == 1:
@@ -41,9 +43,11 @@ class Board:
             if self.motion == 1:
                 builds_player = self.builds_player2
                 edifice_player = self.edifice_player2
+                army = self.army_player2
             else:
                 builds_player = self.builds_player1
                 edifice_player = self.edifice_player1
+                army = self.army_player1
             i = 0
             while i < len(builds_player):
                 if builds_player[i][1] > 0:
@@ -56,14 +60,18 @@ class Board:
                 i += 1
             for elem in edifice_player:
                 self.edifice_functions[elem[0] % 16](elem[-1])
+            for warior in army:
+                warior.go = True
             if self.motion == 1:
                 self.motion = 2
                 self.builds_player2 = builds_player
                 self.edifice_player2 = edifice_player
+                self.army_player2 = army
             else:
                 self.motion = 1
                 self.builds_player1 = builds_player
                 self.edifice_player1 = edifice_player
+                self.army_player1 = army
 
     def build(self, what_build, cell):
         if self.motion == 1:
@@ -175,6 +183,27 @@ class Board:
             self.player2 = player
             self.castle_stage_player2 += 1
 
+    def build_swordsman(self):
+        if self.motion == 1:
+            player = self.player1
+        else:
+            player = self.player2
+        is_ok = True
+        for i in range(3):
+            if player[i] < self.warriors_cost["swordsman"][i]:
+                is_ok = False
+        if is_ok:
+            for i in range(3):
+                player[i] -= self.warriors_cost["swordsman"][i]
+        if self.motion == 1:
+            self.player1 = player
+            self.army_player1.append(Swordsman())
+        else:
+            self.player2 = player
+            self.army_player2.append(Swordsman())
+
+
+
 
 class Game:
     def __init__(self):
@@ -248,7 +277,7 @@ class Game:
         if self.return_action_stage() == "map_VS":
             self.board.selection_cell = self.get_cell()
             if not self.is_construction_window:
-                is_ok = True
+                is_ok = False
                 if self.board.motion == 1:
                     if self.board.get_how_build() <= self.board.square_castle[self.board.castle_stage_player1]:
                         is_ok = True
@@ -385,17 +414,17 @@ class Game:
                 screen.blit(pygame.image.load(self.lst_textures[i]), (20, 20 + cout))
                 cout += 100
             self.render_button(70, 50, 100, 30, "Дом", "house")
-            self.print_text(20, "Деревo: 20, Руда: 0, Железо: 5", (110, 5))
+            self.print_text(20, "Деревo: 20, Руда: 0, Слитки: 5", (110, 5))
             self.render_button(150, 50, 100, 130, "Лесопилка", "sawmill")
-            self.print_text(20, "Деревo: 5, Руда: 0, Железо: 0", (110, 105))
+            self.print_text(20, "Деревo: 5, Руда: 0, Слитки: 0", (110, 105))
             self.render_button(290, 50, 100, 230, "Алхимическая платка", "alchemistry")
-            self.print_text(20, "Деревo: 10, Руда: 0, Железо: 0", (110, 205))
+            self.print_text(20, "Деревo: 10, Руда: 0, Слитки: 0", (110, 205))
             if alchemistry > 0:
                 self.render_button(90, 50, 100, 330, "Шахта", "mine")
-                self.print_text(20, "Деревo: 15, Руда: 0, Железо: 0", (110, 305))
+                self.print_text(20, "Деревo: 15, Руда: 0, Слитки: 0", (110, 305))
             if alchemistry > 1:
                 self.render_button(90, 50, 100, 430, "Кузня", "smithy")
-                self.print_text(20, "Деревo: 20, Руда: 10, Железо: 0", (110, 405))
+                self.print_text(20, "Деревo: 20, Руда: 10, Слитки: 0", (110, 405))
 
     def off_sondtrack(self):
         pygame.mixer.music.pause()
@@ -467,7 +496,17 @@ class Game:
         self.render_button(120, 35, 880, 575, "Выход", "exit_castle", font_size=25)
 
     def build_swordsman(self):
-        self.off_smithy_window() # В начале должна запуститься функция в бэк енде на просчёт цены постройки или улутшения, а она в свою очередь должна как-то отнимать у игрока ресурсы
+        self.off_smithy_window()
+        self.board.build_swordsman()
+
+
+class Swordsman:
+    def __init__(self):
+        self.pos = (0, 0)
+        self.health = 15
+        self.damage = 10
+        self.go = True
+        self.direction = True
 
 
 def load_map():
