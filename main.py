@@ -12,7 +12,7 @@ class Board:
         self.player1 = [1000, 1000, 1000]
         self.builds_player1 = []
         self.edifice_player1 = []
-        self.player2 = [10, 0, 0]
+        self.player2 = [1000, 1000, 1000]
         self.builds_player2 = []
         self.edifice_player2 = []
         self.motion = 1
@@ -312,7 +312,7 @@ class Game:
             if map[self.pos[1]][self.pos[0]] == 3 and self.board.motion == 2:
                 self.castle_pos = self.board.location_bot_castle
                 self.is_castle_window = True
-            if map[self.past_pos[1]][self.past_pos[0]] == 14 and self.board.motion == 1 or map[self.past_pos[1]][self.past_pos[0]] == 13 and self.board.motion == 2:
+            if (map[self.past_pos[1]][self.past_pos[0]] == 14 or map[self.past_pos[1]][self.past_pos[0]] == 15) and self.board.motion == 1 or (map[self.past_pos[1]][self.past_pos[0]] == 13 or map[self.past_pos[1]][self.past_pos[0]] == 12) and self.board.motion == 2:
                 if self.board.motion == 1:
                     army = self.board.army_player1
                 else:
@@ -324,7 +324,7 @@ class Game:
                             if self.past_pos[0] + pos[0] == self.pos[0] and self.past_pos[1] + pos[1] == self.pos[1]:
                                 is_move = True
                         if map[self.pos[1]][self.pos[0]] == 0 and is_move:
-                            warior.move(self.pos, self.past_pos)
+                            warior.move(self.pos, self.past_pos, self.board.motion)
 
     def render(self):
         self.render_functions[self.action_stage]()
@@ -534,7 +534,15 @@ class Swordsman:
         self.direction = True
         self.hit_or_treatment = True
 
-    def move(self, pos, past_pos):
+    def move(self, pos, past_pos, montion):
+        if montion == 1:
+            image = (14, 15)
+        else:
+            image = (12, 13)
+        if pos[0] > past_pos[0]:
+            map[past_pos[1]][past_pos[0]] = image[0]
+        elif pos[0] < past_pos[0]:
+            map[past_pos[1]][past_pos[0]] = image[1]
         map[pos[1]][pos[0]], map[past_pos[1]][past_pos[0]] = map[past_pos[1]][past_pos[0]], map[pos[1]][pos[0]]
         self.pos = pos
         self.go = False
