@@ -63,6 +63,7 @@ class Board:
                 self.edifice_functions[elem[0] % 16](elem[-1])
             for warior in army:
                 warior.go = True
+                warior.hit_or_treatment = True
             if self.motion == 1:
                 self.motion = 2
                 self.builds_player2 = builds_player
@@ -325,6 +326,8 @@ class Game:
                                 is_move = True
                         if map[self.pos[1]][self.pos[0]] == 0 and is_move:
                             warior.move(self.pos, self.past_pos, self.board.motion)
+                        if self.pos == self.past_pos and warior.hit_or_treatment:
+                            warior.treatment()
 
     def render(self):
         self.render_functions[self.action_stage]()
@@ -524,6 +527,12 @@ class Game:
         self.off_smithy_window()
         self.board.build_swordsman()
 
+    def render_win_window(self):
+        pass
+
+    def render_warior_window(self):
+        print(1)
+
 
 class Swordsman:
     def __init__(self, pos):
@@ -531,7 +540,6 @@ class Swordsman:
         self.health = 15
         self.damage = 10
         self.go = True
-        self.direction = True
         self.hit_or_treatment = True
 
     def move(self, pos, past_pos, montion):
@@ -551,7 +559,14 @@ class Swordsman:
         pass
 
     def treatment(self):
+        self.health += 5
+        if self.health > 15:
+            self.health = 15
+        self.hit_or_treatment = False
+
+    def death(self):
         pass
+
 
 def load_map():
     file = open("maps/the_isle", encoding="utf8", mode="r")
