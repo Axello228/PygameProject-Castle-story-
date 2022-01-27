@@ -63,7 +63,6 @@ class Board:
                 self.edifice_functions[elem[0] % 16](elem[-1])
             for warior in army:
                 warior.go = True
-                warior.hit_or_treatment = True
             if self.motion == 1:
                 self.motion = 2
                 self.builds_player2 = builds_player
@@ -246,6 +245,7 @@ class Game:
         self.is_castle_window = False
         self.past_selection_cell = self.board.selection_cell
         self.pos = (0, 0)
+        self.is_warior_window = False
 
     def get_cell(self):
         mouse = pygame.mouse.get_pos()
@@ -287,6 +287,8 @@ class Game:
     def click(self):
         if self.return_action_stage() == "map_VS":
             self.board.selection_cell = self.get_cell()
+            self.past_pos = self.pos
+            self.pos = self.get_cell()
             if not self.is_construction_window:
                 is_ok = False
                 if self.board.motion == 1:
@@ -299,8 +301,6 @@ class Game:
                     self.is_construction_window = True
             elif pygame.mouse.get_pos()[0] > 380 or pygame.mouse.get_pos()[1] > 490:
                 self.is_construction_window = False
-            self.past_pos = self.pos
-            self.pos = self.get_cell()
             if map[self.pos[1]][self.pos[0]] == 18 and not self.is_alchemistry_window:
                 self.alchemistry_pos = self.get_cell()
                 self.is_alchemistry_window = True
@@ -314,10 +314,17 @@ class Game:
                 self.castle_pos = self.board.location_bot_castle
                 self.is_castle_window = True
             if (map[self.past_pos[1]][self.past_pos[0]] == 14 or map[self.past_pos[1]][self.past_pos[0]] == 15) and self.board.motion == 1 or (map[self.past_pos[1]][self.past_pos[0]] == 13 or map[self.past_pos[1]][self.past_pos[0]] == 12) and self.board.motion == 2:
+                self.is_warior_window = True
                 if self.board.motion == 1:
                     army = self.board.army_player1
+                    arm = self.board.army_player2
+                    a = (12, 13)
+                    b = (14, 15)
                 else:
                     army = self.board.army_player2
+                    arm = self.board.army_player1
+                    a = (14, 15)
+                    b = (12, 13)
                 for warior in army:
                     if warior.pos == self.past_pos and warior.go:
                         is_move = False
@@ -325,9 +332,19 @@ class Game:
                             if self.past_pos[0] + pos[0] == self.pos[0] and self.past_pos[1] + pos[1] == self.pos[1]:
                                 is_move = True
                         if map[self.pos[1]][self.pos[0]] == 0 and is_move:
-                            warior.move(self.pos, self.past_pos, self.board.motion)
-                        if self.pos == self.past_pos and warior.hit_or_treatment:
-                            warior.treatment()
+                            warior.move(self.pos, self.past_pos, self.board.motion, self.is_sounds, pygame.mixer.Sound(r'sounds\go.mp3'))
+                        if map[self.pos[1]][self.pos[0]] == map[self.past_pos[1]][self.past_pos[0]] and warior.go:
+                            warior.treatment(self.is_sounds, pygame.mixer.Sound(r'sounds\healing.mp3'))
+                        if map[self.past_pos[1]][self.past_pos[0]] in a and map[self.pos[1]][self.pos[0]] in b:
+                            for i in range(len(arm)):
+                                if arm[i].pos == self.pos:
+                                    warior.hit(self.is_sounds, pygame.mixer.Sound(r'sounds\hit.mp3'))
+                                    if arm[i].damage():
+                                        pass
+
+
+    def off_warior_window(self):
+        self.is_warior_window = False
 
     def render(self):
         self.render_functions[self.action_stage]()
@@ -383,7 +400,7 @@ class Game:
             self.print_text(40, self.resources[i] + str(lst_player[i]), (x, y))
             x += 300
         pygame.draw.rect(screen, self.active_clr, (x + 100, y, 270, 50))
-        game.print_text(40 , "Ход игрока №" + str(self.board.motion), (x + 100, y))
+        game.print_text(40, "Ход игрока №" + str(self.board.motion), (x + 100, y))
         if self.is_construction_window:
             self.render_construction_window(self.board.selection_cell)
         if self.is_alchemistry_window:
@@ -528,10 +545,7 @@ class Game:
         self.board.build_swordsman()
 
     def render_win_window(self):
-        pass
-
-    def render_warior_window(self):
-        print(1)
+        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
 
 
 class Swordsman:
@@ -540,9 +554,8 @@ class Swordsman:
         self.health = 15
         self.damage = 10
         self.go = True
-        self.hit_or_treatment = True
 
-    def move(self, pos, past_pos, montion):
+    def move(self, pos, past_pos, montion, is_sound, sound):
         if montion == 1:
             image = (14, 15)
         else:
@@ -554,18 +567,27 @@ class Swordsman:
         map[pos[1]][pos[0]], map[past_pos[1]][past_pos[0]] = map[past_pos[1]][past_pos[0]], map[pos[1]][pos[0]]
         self.pos = pos
         self.go = False
+        if is_sound:
+            pygame.mixer.Sound.play(sound)
 
-    def hit(self):
-        pass
+    def hit(self, is_sound, sound):
+        self.go = False
+        if is_sound:
+            pygame.mixer.Sound.play(sound)
 
-    def treatment(self):
+    def treatment(self, is_sound, sound):
         self.health += 5
         if self.health > 15:
             self.health = 15
-        self.hit_or_treatment = False
+        self.go = False
+        if is_sound:
+            pygame.mixer.Sound.play(sound)
 
-    def death(self):
-        pass
+    def damage(self):
+        self.health -= 10
+        if self.health <= 0:
+            return True
+        return False
 
 
 def load_map():
