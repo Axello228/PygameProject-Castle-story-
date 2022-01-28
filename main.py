@@ -567,9 +567,9 @@ class Game:
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
         if self.cout_amogus_fleks == len(self.amogus_fleks) or self.cout_amogus_fleks == 0:
             self.cout_amogus_fleks = 1
-        screen.blit(pygame.transform.scale(pygame.image.load(self.amogus_fleks[self.cout_amogus_fleks - 1]), (200, 150)), (830, 380))
+        screen.blit(pygame.transform.scale(pygame.image.load(self.amogus_fleks[self.cout_amogus_fleks - 1]), (200, 150)), (830, 390))
         self.cout_amogus_fleks += 1
-        self.print_text(25, "Победил игрок номер " + str(self.board.motion), (815, 340))
+        self.print_text(25, "Победил игрок номер " + str(self.board.motion), (815, 350))
         self.render_button(80, 35, 820, 600, "Выход", "main_menu", font_size=25)
 
 
