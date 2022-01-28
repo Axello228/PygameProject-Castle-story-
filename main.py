@@ -226,6 +226,8 @@ class Game:
                 "textures\sw_beach.png", "textures\\bot_swordsman_r.png", "textures\\bot_swordsman_l.png",
                 "textures\my_swordsman_r.png", "textures\my_swordsman_l.png", "textures\house.png", "textures\sawmill.png",
                 "textures\\alchemistry.png", "textures\mine.png", "textures\smithy.png", "textures\\byilding_table.png"]
+        self.amogus_fleks = [r"textures\amogus1.jpg", r"textures\amogus2.jpg", r"textures\amogus3.jpg", r"textures\amogus4.jpg", r"textures\amogus5.jpg", r"textures\amogus6.jpg"]
+        self.cout_amogus_fleks = 0
         self.resources = ["Дерево: ", "Руда: ", "Слитки: "]
         self.actions_in_the_game = {"up_alchemistry": self.up_alchemistry, "exit_alchemistry": self.off_alchemistry_window,
                                     'exit': self.exit, "up_castle": self.up_castle, "exit_smithy": self.off_smithy_window,
@@ -492,6 +494,8 @@ class Game:
 
     def render_build(self, what_build):
         self.is_construction_window = False
+        if self.is_sounds:
+            pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds\build.mp3'))
         map[self.board.selection_cell[1]][self.board.selection_cell[0]] = 21
         self.board.build(what_build, self.board.selection_cell)
 
@@ -558,7 +562,13 @@ class Game:
         self.board.build_swordsman()
 
     def render_win_window(self):
+        if self.cout_amogus_fleks == 0 and self.is_sounds:
+            pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds\win.mp3'))
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
+        if self.cout_amogus_fleks == len(self.amogus_fleks) or self.cout_amogus_fleks == 0:
+            self.cout_amogus_fleks = 1
+        screen.blit(pygame.transform.scale(pygame.image.load(self.amogus_fleks[self.cout_amogus_fleks - 1]), (200, 150)), (830, 380))
+        self.cout_amogus_fleks += 1
         self.print_text(25, "Победил игрок номер " + str(self.board.motion), (815, 340))
         self.render_button(80, 35, 820, 600, "Выход", "main_menu", font_size=25)
 
