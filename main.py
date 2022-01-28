@@ -325,11 +325,13 @@ class Game:
                     arm = self.board.army_player2
                     a = (14, 15)
                     b = (12, 13)
+                    castle = self.board.location_bot_castle
                 else:
                     army = self.board.army_player2
                     arm = self.board.army_player1
                     a = (12, 13)
                     b = (14, 15)
+                    castle = self.board.location_my_castle
                 for warior in army:
                     if warior.pos == self.past_pos and warior.go:
                         is_move = False
@@ -340,13 +342,19 @@ class Game:
                             warior.move(self.pos, self.past_pos, self.board.motion, self.is_sounds, pygame.mixer.Sound(r'sounds\go.mp3'))
                         if map[self.pos[1]][self.pos[0]] == map[self.past_pos[1]][self.past_pos[0]] and warior.go:
                             warior.treatment(self.is_sounds, pygame.mixer.Sound(r'sounds\healing.mp3'))
-                        if map[self.past_pos[1]][self.past_pos[0]] in a and map[self.pos[1]][self.pos[0]] in b:
+                        is_hit = False
+                        for pos in self.board.move_swordsman:
+                            if self.past_pos[0] + pos[0] == self.pos[0] and self.past_pos[1] + pos[1] == self.pos[1]:
+                                is_hit = True
+                        if map[self.past_pos[1]][self.past_pos[0]] in a and map[self.pos[1]][self.pos[0]] in b and is_hit:
                             for enemy in arm:
                                 if enemy.pos == self.pos:
                                     warior.hit(self.is_sounds, pygame.mixer.Sound(r'sounds\hit.mp3'))
                                     enemy.damage()
                                     if enemy.death:
                                         map[enemy.pos[1]][enemy.pos[0]] = 0
+                        if map[self.past_pos[1]][self.past_pos[0]] in a and self.pos == castle:
+                            pass
 
 
     def off_warior_window(self):
@@ -549,7 +557,6 @@ class Game:
     def build_swordsman(self):
         self.off_smithy_window()
         self.board.build_swordsman()
-
 
     def render_win_window(self):
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
