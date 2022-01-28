@@ -45,10 +45,12 @@ class Board:
                 builds_player = self.builds_player2
                 edifice_player = self.edifice_player2
                 army = self.army_player2
+                self.house_place_player2 = 0
             else:
                 builds_player = self.builds_player1
                 edifice_player = self.edifice_player1
                 army = self.army_player1
+                self.house_place_player1
             i = 0
             while i < len(builds_player):
                 if builds_player[i][1] > 0:
@@ -120,7 +122,10 @@ class Board:
         pass
 
     def house(self, pos):
-        pass
+        if self.motion == 1:
+            self.house_place_player2 += 2
+        else:
+            self.house_place_player1 += 2
 
     def get_alchemistry_stage(self):
         if self.motion == 1:
@@ -318,13 +323,13 @@ class Game:
                 if self.board.motion == 1:
                     army = self.board.army_player1
                     arm = self.board.army_player2
-                    a = (12, 13)
-                    b = (14, 15)
+                    a = (14, 15)
+                    b = (12, 13)
                 else:
                     army = self.board.army_player2
                     arm = self.board.army_player1
-                    a = (14, 15)
-                    b = (12, 13)
+                    a = (12, 13)
+                    b = (14, 15)
                 for warior in army:
                     if warior.pos == self.past_pos and warior.go:
                         is_move = False
@@ -336,11 +341,12 @@ class Game:
                         if map[self.pos[1]][self.pos[0]] == map[self.past_pos[1]][self.past_pos[0]] and warior.go:
                             warior.treatment(self.is_sounds, pygame.mixer.Sound(r'sounds\healing.mp3'))
                         if map[self.past_pos[1]][self.past_pos[0]] in a and map[self.pos[1]][self.pos[0]] in b:
-                            for i in range(len(arm)):
-                                if arm[i].pos == self.pos:
+                            for enemy in arm:
+                                if enemy.pos == self.pos:
                                     warior.hit(self.is_sounds, pygame.mixer.Sound(r'sounds\hit.mp3'))
-                                    if arm[i].damage():
-                                        pass
+                                    enemy.damage()
+                                    if enemy.death:
+                                        map[enemy.pos[1]][enemy.pos[0]] = 0
 
 
     def off_warior_window(self):
@@ -544,6 +550,7 @@ class Game:
         self.off_smithy_window()
         self.board.build_swordsman()
 
+
     def render_win_window(self):
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
 
@@ -552,8 +559,8 @@ class Swordsman:
     def __init__(self, pos):
         self.pos = (pos[0], pos[1] + 1)
         self.health = 15
-        self.damage = 10
         self.go = True
+        self.death = False
 
     def move(self, pos, past_pos, montion, is_sound, sound):
         if montion == 1:
@@ -586,8 +593,7 @@ class Swordsman:
     def damage(self):
         self.health -= 10
         if self.health <= 0:
-            return True
-        return False
+            self.death = True
 
 
 def load_map():
