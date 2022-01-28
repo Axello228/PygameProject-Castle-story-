@@ -309,10 +309,10 @@ class Game:
                     self.is_construction_window = True
             elif pygame.mouse.get_pos()[0] > 380 or pygame.mouse.get_pos()[1] > 490:
                 self.is_construction_window = False
-            if map[self.pos[1]][self.pos[0]] == 18 and not self.is_alchemistry_window:
+            if map[self.pos[1]][self.pos[0]] == 18 and not self.is_alchemistry_window and is_ok:
                 self.alchemistry_pos = self.get_cell()
                 self.is_alchemistry_window = True
-            if map[self.pos[1]][self.pos[0]] == 20 and not self.is_smithy_window:
+            if map[self.pos[1]][self.pos[0]] == 20 and not self.is_smithy_window and is_ok:
                 self.smithy_pos = self.get_cell()
                 self.is_smithy_window = True
             if map[self.pos[1]][self.pos[0]] == 2 and self.board.motion == 1:
@@ -660,4 +660,4 @@ while running:
     game.render()
     clock.tick(fps)
     pygame.display.flip()
-""")В игре есть две фичи: После улутшения чего либо окно строительства открывается после Второго клика; Алхимическую палатку одного игрока может открыть другой игрок и та улутшиться"""
+"""После улутшения чего либо окно строительства открывается после Второго клика"""
