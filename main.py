@@ -217,6 +217,21 @@ class Board:
                 self.army_player2.append(Swordsman(pos))
                 map[pos[1] + 1][pos[0]] = 13
 
+    @staticmethod
+    def load_map(name):
+        file = open(name, encoding="utf8", mode="r")
+        lines = file.readlines()
+        file.close()
+        map = []
+        for i in range(len(lines) - 1):
+            lines[i] = lines[i][:-1]
+        for elem in lines:
+            map.append(elem.split(", "))
+        for i in range(17):
+            for j in range(32):
+                map[i][j] = int(map[i][j])
+        return map
+
 
 class Game:
     def __init__(self):
@@ -297,14 +312,14 @@ class Game:
             self.board.selection_cell = self.get_cell()
             self.past_pos = self.pos
             self.pos = self.get_cell()
+            is_ok = False
+            if self.board.motion == 1:
+                if self.board.get_how_build() <= self.board.square_castle[self.board.castle_stage_player1]:
+                    is_ok = True
+            else:
+                if self.board.get_how_build() <= self.board.square_castle[self.board.castle_stage_player2]:
+                    is_ok = True
             if not self.is_construction_window:
-                is_ok = False
-                if self.board.motion == 1:
-                    if self.board.get_how_build() <= self.board.square_castle[self.board.castle_stage_player1]:
-                        is_ok = True
-                else:
-                    if self.board.get_how_build() <= self.board.square_castle[self.board.castle_stage_player2]:
-                        is_ok = True
                 if is_ok:
                     self.is_construction_window = True
             elif pygame.mouse.get_pos()[0] > 380 or pygame.mouse.get_pos()[1] > 490:
@@ -614,21 +629,7 @@ class Swordsman:
             self.death = True
 
 
-def load_map():
-    file = open("maps/the_isle", encoding="utf8", mode="r")
-    lines = file.readlines()
-    file.close()
-    map = []
-    for i in range(len(lines) - 1):
-        lines[i] = lines[i][:-1]
-    for elem in lines:
-        map.append(elem.split(", "))
-    for i in range(17):
-        for j in range(32):
-            map[i][j] = int(map[i][j])
-    return map
-
-map = load_map()
+map = Board.load_map("maps/the_isle")
 main_screen = pygame.transform.scale(pygame.image.load(r"textures\background.jpg"), (1920, 1080))
 construction_window_screen = pygame.transform.scale(pygame.image.load(r"textures\background_construction_window.PNG"), (400, 1080))
 running = True
