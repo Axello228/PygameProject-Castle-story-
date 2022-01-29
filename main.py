@@ -32,6 +32,8 @@ class Board:
         self.army_player1 = []
         self.army_player2 = []
         self.move_swordsman = [(1, 0), (0, 1), (1, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]
+        self.pos = (0, 0)
+        self.past_pos = (0, 0)
 
     def get_player(self):
         if self.motion == 1:
@@ -50,7 +52,9 @@ class Board:
                 builds_player = self.builds_player1
                 edifice_player = self.edifice_player1
                 army = self.army_player1
-                self.house_place_player1
+                self.house_place_player1 = 0
+            self.pos = (0, 0)
+            self.past_pos = (0, 0)
             i = 0
             while i < len(builds_player):
                 if builds_player[i][1] > 0:
@@ -265,8 +269,6 @@ class Game:
         self.is_smithy_window = False
         self.board = Board()
         self.is_castle_window = False
-        self.past_selection_cell = self.board.selection_cell
-        self.pos = (0, 0)
         self.is_warior_window = False
         self.is_win_window = False
 
@@ -310,8 +312,8 @@ class Game:
     def click(self):
         if self.return_action_stage() == "map_VS":
             self.board.selection_cell = self.get_cell()
-            self.past_pos = self.pos
-            self.pos = self.get_cell()
+            self.board.past_pos = self.board.pos
+            self.board.pos = self.get_cell()
             is_ok = False
             if self.board.motion == 1:
                 if self.board.get_how_build() <= self.board.square_castle[self.board.castle_stage_player1]:
@@ -324,19 +326,19 @@ class Game:
                     self.is_construction_window = True
             elif pygame.mouse.get_pos()[0] > 380 or pygame.mouse.get_pos()[1] > 490:
                 self.is_construction_window = False
-            if map[self.pos[1]][self.pos[0]] == 18 and not self.is_alchemistry_window and is_ok:
+            if map[self.board.pos[1]][self.board.pos[0]] == 18 and not self.is_alchemistry_window and is_ok:
                 self.alchemistry_pos = self.get_cell()
                 self.is_alchemistry_window = True
-            if map[self.pos[1]][self.pos[0]] == 20 and not self.is_smithy_window and is_ok:
+            if map[self.board.pos[1]][self.board.pos[0]] == 20 and not self.is_smithy_window and is_ok:
                 self.smithy_pos = self.get_cell()
                 self.is_smithy_window = True
-            if map[self.pos[1]][self.pos[0]] == 2 and self.board.motion == 1:
+            if map[self.board.pos[1]][self.board.pos[0]] == 2 and self.board.motion == 1:
                 self.castle_pos = self.board.location_my_castle
                 self.is_castle_window = True
-            if map[self.pos[1]][self.pos[0]] == 3 and self.board.motion == 2:
+            if map[self.board.pos[1]][self.board.pos[0]] == 3 and self.board.motion == 2:
                 self.castle_pos = self.board.location_bot_castle
                 self.is_castle_window = True
-            if (map[self.past_pos[1]][self.past_pos[0]] == 14 or map[self.past_pos[1]][self.past_pos[0]] == 15) and self.board.motion == 1 or (map[self.past_pos[1]][self.past_pos[0]] == 13 or map[self.past_pos[1]][self.past_pos[0]] == 12) and self.board.motion == 2:
+            if (map[self.board.past_pos[1]][self.board.past_pos[0]] == 14 or map[self.board.past_pos[1]][self.board.past_pos[0]] == 15) and self.board.motion == 1 or (map[self.board.past_pos[1]][self.board.past_pos[0]] == 13 or map[self.board.past_pos[1]][self.board.past_pos[0]] == 12) and self.board.motion == 2:
                 self.is_warior_window = True
                 if self.board.motion == 1:
                     army = self.board.army_player1
@@ -351,23 +353,23 @@ class Game:
                     b = (14, 15)
                     castle = self.board.location_my_castle
                 for warior in army:
-                    if warior.pos == self.past_pos and warior.go:
+                    if warior.pos == self.board.past_pos and warior.go:
                         is_move = False
                         for pos in self.board.move_swordsman:
-                            if self.past_pos[0] + pos[0] == self.pos[0] and self.past_pos[1] + pos[1] == self.pos[1]:
+                            if self.board.past_pos[0] + pos[0] == self.board.pos[0] and self.board.past_pos[1] + pos[1] == self.board.pos[1]:
                                 is_move = True
-                        if map[self.pos[1]][self.pos[0]] == 0 and is_move:
-                            warior.move(self.pos, self.past_pos, self.board.motion, self.is_sounds, pygame.mixer.Sound(r'sounds\go.mp3'))
-                        if map[self.pos[1]][self.pos[0]] == map[self.past_pos[1]][self.past_pos[0]] and warior.go:
+                        if map[self.board.pos[1]][self.board.pos[0]] == 0 and is_move:
+                            warior.move(self.board.pos, self.board.past_pos, self.board.motion, self.is_sounds, pygame.mixer.Sound(r'sounds\go.mp3'))
+                        if map[self.board.pos[1]][self.board.pos[0]] == map[self.board.past_pos[1]][self.board.past_pos[0]] and warior.go:
                             warior.treatment(self.is_sounds, pygame.mixer.Sound(r'sounds\healing.mp3'))
-                        if map[self.past_pos[1]][self.past_pos[0]] in a and map[self.pos[1]][self.pos[0]] in b and is_move:
+                        if map[self.board.past_pos[1]][self.board.past_pos[0]] in a and map[self.board.pos[1]][self.board.pos[0]] in b and is_move:
                             for enemy in arm:
-                                if enemy.pos == self.pos:
+                                if enemy.pos == self.board.pos:
                                     warior.hit(self.is_sounds, pygame.mixer.Sound(r'sounds\hit.mp3'))
                                     enemy.damage()
                                     if enemy.death:
                                         map[enemy.pos[1]][enemy.pos[0]] = 0
-                        if map[self.past_pos[1]][self.past_pos[0]] in a and self.pos == castle and is_move:
+                        if map[self.board.past_pos[1]][self.board.past_pos[0]] in a and self.board.pos == castle and is_move:
                             self.is_win_window = True
 
 
