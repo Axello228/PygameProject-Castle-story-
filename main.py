@@ -324,9 +324,6 @@ class Game:
         self.is_warior_window = False
         self.is_win_window = False
 
-    def load(self):
-        pass
-
     def save(self):
         self.board.save([self.cout_amogus_fleks], [self.is_win_window])
 
