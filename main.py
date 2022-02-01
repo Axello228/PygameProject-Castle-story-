@@ -32,6 +32,34 @@ class Board:
         self.pos = (0, 0)
         self.past_pos = (0, 0)
 
+    def save(self, lst_int, lst_bool):
+        lst_int.extend([self.motion, self.alchemistry_stage_player1, self.alchemistry_stage_player2, self.castle_stage_player1,
+                       self.castle_stage_player2,  self.house_place_player1,  self.house_place_player2])
+        for i in range(len(lst_int)):
+            lst_int[i] = str(lst_int[i])
+        for i in range(len(lst_bool)):
+            lst_bool[i] = str(lst_bool[i])
+        lst_lst = [self.player1, self.player2, self.builds_player1, self.builds_player2, self.edifice_player1, self.edifice_player2,
+                   self.army_player1, self.army_player2]
+        for i in range(len(lst_lst)):
+            for j in range(len(lst_lst[i])):
+                lst_lst[i][j] = str(lst_lst[i][j])
+        for i in range(len(lst_lst)):
+            lst_lst[i] = " ".join(lst_lst[i])
+        file = open(r"saves_and_loads\\1_VS_1", mode="w", encoding="utf8")
+        file.write(", ".join(lst_bool) + "\n")
+        file.write(", ".join(lst_int) + "\n")
+        file.write(", ".join(lst_lst) + "\n")
+        for i in range(len(self.map)):
+            for j in range(len(self.map[i])):
+                self.map[i][j] = str(self.map[i][j])
+        for i in range(len(self.map) - 1):
+            file.write(", ".join(self.map[i]) + "\n")
+        file.write(", ".join(self.map[-1]))
+        for i in range(len(self.map)):
+            for j in range(len(self.map[i])):
+                self.map[i][j] = int(self.map[i][j])
+
     def new_game(self):
         for i in range(17):
             for j in range(32):
@@ -276,12 +304,13 @@ class Game:
         self.past_action_stage = "main_menu"
         self.action_stage = "main_menu"
         self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
-                    "map_VS": self.render_map_VS, "settings": self.render_settings_window, "maps": self.render_selection_map_window}
+                    "map_VS": self.render_map_VS, "settings": self.render_settings_window, "maps": self.render_selection_map_window,
+                                 "load_selection": self.render_load_mode_screen}
         self.building = {"house": [16, 20, 0, 5], "sawmill": [17, 5, 0, 0], "alchemistry": [18, 10, 0, 0],
                          "mine": [19, 15, 0, 0], "smithy": [20, 20, 10, 0]}
         self.settings = {"on_music": self.on_soundtrack, "off_music": self.off_sondtrack, "on_sounds": self.on_sounds,
                          "off_sounds": self.off_sounds}
-        self.loads = {"isle": self.load_isle, "forest": self.load_forest}
+        self.loads = {"isle": self.load_isle, "forest": self.load_forest, "save": self.save}
         self.build_warriors = {"swordsman": self.build_swordsman}
         self.active_clr = (204, 229, 255)
         self.is_construction_window = False
@@ -294,6 +323,12 @@ class Game:
         self.is_castle_window = False
         self.is_warior_window = False
         self.is_win_window = False
+
+    def load(self):
+        pass
+
+    def save(self):
+        self.board.save([self.cout_amogus_fleks], [self.is_win_window])
 
     def get_cell(self):
         mouse = pygame.mouse.get_pos()
@@ -391,7 +426,7 @@ class Game:
                                     warior.hit(self.is_sounds, pygame.mixer.Sound(r'sounds\hit.mp3'))
                                     enemy.damage()
                                     if enemy.death:
-                                        self.board.map[enemy.pos[1]][enemy.pos[0]] = 0
+                                        self.board.map[enemy.pos[1]][enemy.pos[0]] = 0 # тут я не удаляю из списка воина поэтому и происходит баг описанный ниже
                         if self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] in a and self.board.pos == castle and is_move:
                             self.is_win_window = True
 
@@ -469,7 +504,7 @@ class Game:
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
         self.render_button(240, 50, 825, 340, "Продолжить игру", "map_VS")
         self.render_button(240, 50, 825, 400, "Главное меню", "main_menu")
-        self.render_button(240, 50, 825, 460, "Сохранить")
+        self.render_button(240, 50, 825, 460, "Сохранить", "save")
         self.render_button(240, 50, 825, 520, "Настройки", "settings")
         click = pygame.mouse.get_pressed()
         mouse = pygame.mouse.get_pos()
@@ -478,18 +513,28 @@ class Game:
 
     def render_mode_selection_screen(self):
         screen.blit(main_screen, (0, 0))
+        self.print_text(40, "Выбирите режим", (800, 10))
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (800, 1100)), (-70, -50))
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (800, 1100)), (560, -50))
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (800, 1100)), (1190, -50))
         self.render_button(135, 55, 250, 80, "1 VS 1", "maps", font_size=45)
         self.render_button(135, 55, 890, 80, "Waves", font_size=45)
         self.render_button(170, 55, 1500, 80, "Invasion", font_size=45)
-        self.print_text(30, "В разработке", (110, 200))
+        self.print_text(30, "В бета тестировании", (110, 200))
         self.print_text(30, "В разработке", (740, 200))
         self.print_text(30, "В разработке", (1370, 200))
 
+    def render_load_mode_screen(self):
+        screen.blit(main_screen, (0, 0))
+        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 330))
+        self.print_text(40, "Какой режим загрузить?", (780, 20))
+        self.render_button(100, 40, 900, 410, "1 VS 1")
+        self.render_button(100, 40, 900, 470, "Waves")
+        self.render_button(130, 40, 900, 530, "Invasion")
+
     def render_selection_map_window(self):
         screen.blit(main_screen, (0, 0))
+        self.print_text(40, "Выбирите карту", (850, 10))
         self.render_button(596, 344, 90, 90, "", "isle")
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\isle_screen.PNG"), (576, 324)), (100, 100))
         self.render_button(596, 344, 700, 90, "", "forest")
@@ -522,7 +567,7 @@ class Game:
         screen.blit(main_screen, (0, 0))
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (460, 400)), (750, 320))
         self.render_button(250, 45, 850, 400, "Начать новую игру", "mode_selection")
-        self.render_button(250, 45, 850, 450, "Загрузить игру")
+        self.render_button(250, 45, 850, 450, "Загрузить игру", "load_selection")
         self.render_button(250, 45, 850, 500, "Настройки", "settings")
         self.render_button(250, 45, 850, 550, "Выход", "exit")
 
@@ -711,8 +756,9 @@ while running:
             if event.key == pygame.K_SPACE:
                 game.course_change()
             if event.key == pygame.K_ESCAPE:
-               game.click_esc()
+                game.click_esc()
     game.render()
     clock.tick(fps)
     pygame.display.flip()
 """После улутшения чего либо окно строительства открывается после Второго клика"""
+"""Появилась проблема с мечниками он второго мечника убил за один раз хотя должен за два нужно отловить момент сбоя"""
