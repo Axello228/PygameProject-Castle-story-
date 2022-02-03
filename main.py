@@ -32,6 +32,9 @@ class Board:
         self.pos = (0, 0)
         self.past_pos = (0, 0)
 
+    def load(self, lst_bool, lst_int, lst_lst, lst_map):
+        pass
+
     def save(self, lst_int, lst_bool):
         lst_int.extend([self.motion, self.alchemistry_stage_player1, self.alchemistry_stage_player2, self.castle_stage_player1,
                        self.castle_stage_player2,  self.house_place_player1,  self.house_place_player2])
@@ -310,7 +313,7 @@ class Game:
                          "mine": [19, 15, 0, 0], "smithy": [20, 20, 10, 0]}
         self.settings = {"on_music": self.on_soundtrack, "off_music": self.off_sondtrack, "on_sounds": self.on_sounds,
                          "off_sounds": self.off_sounds}
-        self.loads = {"isle": self.load_isle, "forest": self.load_forest, "save": self.save}
+        self.loads = {"isle": self.load_isle, "forest": self.load_forest, "save": self.save, "load": self.load}
         self.build_warriors = {"swordsman": self.build_swordsman}
         self.active_clr = (204, 229, 255)
         self.is_construction_window = False
@@ -323,6 +326,25 @@ class Game:
         self.is_castle_window = False
         self.is_warior_window = False
         self.is_win_window = False
+
+    def load(self):
+        file = open("saves_and_loads\\1_VS_1", encoding="utf8", mode="r")
+        lines = file.readlines()
+        lst_bool = lines[0][:-1].split(", ")
+        lst_int = lines[1][:-1].split(", ")
+        lst_lst = lines[2][:-1].split(", ")
+        lst_map = []
+        for i in range(len(lines[3:])):
+            lst_map.append(lines[i][:-1].split(", "))
+        if lst_bool[0] == "True":
+            self.is_win_window = True
+        else:
+            self.is_win_window = False
+        del lst_bool[0]
+        self.cout_amogus_fleks = int(lst_int[0])
+        del lst_int[0]
+        self.board.load(lst_bool, lst_int, lst_lst, lst_map)
+        self.action_stage = "map_VS"
 
     def save(self):
         self.board.save([self.cout_amogus_fleks], [self.is_win_window])
@@ -418,12 +440,15 @@ class Game:
                         if self.board.map[self.board.pos[1]][self.board.pos[0]] == self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] and warior.go:
                             warior.treatment(self.is_sounds, pygame.mixer.Sound(r'sounds\healing.mp3'))
                         if self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] in a and self.board.map[self.board.pos[1]][self.board.pos[0]] in b and is_move:
-                            for enemy in arm:
-                                if enemy.pos == self.board.pos:
+                            i = 0
+                            while i < len(arm):
+                                if arm[i].pos == self.board.pos:
                                     warior.hit(self.is_sounds, pygame.mixer.Sound(r'sounds\hit.mp3'))
-                                    enemy.damage()
-                                    if enemy.death:
-                                        self.board.map[enemy.pos[1]][enemy.pos[0]] = 0 # тут я не удаляю из списка воина поэтому и происходит баг описанный ниже
+                                    arm[i].damage()
+                                    if arm[i].death:
+                                        self.board.map[arm[i].pos[1]][arm[i].pos[0]] = 0
+                                        del arm[i]
+                                i += 1
                         if self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] in a and self.board.pos == castle and is_move:
                             self.is_win_window = True
 
@@ -525,7 +550,7 @@ class Game:
         screen.blit(main_screen, (0, 0))
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 330))
         self.print_text(40, "Какой режим загрузить?", (780, 20))
-        self.render_button(100, 40, 900, 410, "1 VS 1")
+        self.render_button(100, 40, 900, 410, "1 VS 1", "load")
         self.render_button(100, 40, 900, 470, "Waves")
         self.render_button(130, 40, 900, 530, "Invasion")
 
