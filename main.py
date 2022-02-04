@@ -1,4 +1,5 @@
 import pygame
+import random
 
 
 class Board:
@@ -33,7 +34,8 @@ class Board:
         self.past_pos = (0, 0)
 
     def load(self, lst_bool, lst_int, lst_lst, lst_map):
-        pass
+        """а тут автор умер от передоза наркомании которую предстоит ему тут написать"""
+
 
     def save(self, lst_int, lst_bool):
         lst_int.extend([self.motion, self.alchemistry_stage_player1, self.alchemistry_stage_player2, self.castle_stage_player1,
@@ -43,25 +45,26 @@ class Board:
         for i in range(len(lst_bool)):
             lst_bool[i] = str(lst_bool[i])
         lst_lst = [self.player1, self.player2, self.builds_player1, self.builds_player2, self.edifice_player1, self.edifice_player2,
-                   self.army_player1, self.army_player2]
+                   self.army_player1, self.army_player2] # неправильно сохраняю армию
         for i in range(len(lst_lst)):
             for j in range(len(lst_lst[i])):
                 lst_lst[i][j] = str(lst_lst[i][j])
         for i in range(len(lst_lst)):
             lst_lst[i] = " ".join(lst_lst[i])
         file = open(r"saves_and_loads\\1_VS_1", mode="w", encoding="utf8")
-        file.write(", ".join(lst_bool) + "\n")
-        file.write(", ".join(lst_int) + "\n")
-        file.write(", ".join(lst_lst) + "\n")
+        file.write("; ".join(lst_bool) + "\n")
+        file.write("; ".join(lst_int) + "\n")
+        file.write("; ".join(lst_lst) + "\n")
         for i in range(len(self.map)):
             for j in range(len(self.map[i])):
                 self.map[i][j] = str(self.map[i][j])
         for i in range(len(self.map) - 1):
-            file.write(", ".join(self.map[i]) + "\n")
-        file.write(", ".join(self.map[-1]))
+            file.write("; ".join(self.map[i]) + "\n")
+        file.write("; ".join(self.map[-1]))
         for i in range(len(self.map)):
             for j in range(len(self.map[i])):
                 self.map[i][j] = int(self.map[i][j])
+        file.close()
 
     def new_game(self):
         for i in range(17):
@@ -330,18 +333,19 @@ class Game:
     def load(self):
         file = open("saves_and_loads\\1_VS_1", encoding="utf8", mode="r")
         lines = file.readlines()
-        lst_bool = lines[0][:-1].split(", ")
-        lst_int = lines[1][:-1].split(", ")
-        lst_lst = lines[2][:-1].split(", ")
+        file.close()
+        lst_bool = lines[0][:-1].split("; ")
+        lst_int = lines[1][:-1].split("; ")
+        lst_lst = lines[2][:-1].split("; ")
         lst_map = []
         for i in range(len(lines[3:])):
-            lst_map.append(lines[i][:-1].split(", "))
+            lst_map.append(lines[i][:-1].split("; "))
         if lst_bool[0] == "True":
             self.is_win_window = True
         else:
             self.is_win_window = False
         del lst_bool[0]
-        self.cout_amogus_fleks = int(lst_int[0])
+        self.cout_amogus_fleks = 0
         del lst_int[0]
         self.board.load(lst_bool, lst_int, lst_lst, lst_map)
         self.action_stage = "map_VS"
@@ -436,18 +440,31 @@ class Game:
                             if self.board.past_pos[0] + pos[0] == self.board.pos[0] and self.board.past_pos[1] + pos[1] == self.board.pos[1]:
                                 is_move = True
                         if self.board.map[self.board.pos[1]][self.board.pos[0]] == 0 and is_move:
-                            warior.move(self.board.pos, self.board.past_pos, self.board.motion, self.is_sounds, pygame.mixer.Sound(r'sounds\go.mp3'), self.board.map)
+                            random_sound = random.randint(0, 100)
+                            sound = r'sounds\go.mp3'
+                            if random_sound == 68:
+                                sound = r"sounds\monolit.mp3"
+                            warior.move(self.board.pos, self.board.past_pos, self.board.motion, self.is_sounds, pygame.mixer.Sound(sound), self.board.map)
                         if self.board.map[self.board.pos[1]][self.board.pos[0]] == self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] and warior.go:
                             warior.treatment(self.is_sounds, pygame.mixer.Sound(r'sounds\healing.mp3'))
                         if self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] in a and self.board.map[self.board.pos[1]][self.board.pos[0]] in b and is_move:
                             i = 0
                             while i < len(arm):
                                 if arm[i].pos == self.board.pos:
-                                    warior.hit(self.is_sounds, pygame.mixer.Sound(r'sounds\hit.mp3'))
+                                    random_sound = random.randint(0, 100)
+                                    sound = r'sounds\hit.mp3'
+                                    if random_sound == 87:
+                                        sound = r"sounds\toporik.mp3"
+                                    warior.hit(self.is_sounds, pygame.mixer.Sound(sound))
                                     arm[i].damage()
                                     if arm[i].death:
                                         self.board.map[arm[i].pos[1]][arm[i].pos[0]] = 0
                                         del arm[i]
+                                        random_sound = random.randint(0, 100)
+                                        if random_sound == 28:
+                                            pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds\maslina.mp3'))
+                                        elif random_sound == 49:
+                                            pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds\come_back.mp3'))
                                 i += 1
                         if self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] in a and self.board.pos == castle and is_move:
                             self.is_win_window = True
@@ -550,9 +567,10 @@ class Game:
         screen.blit(main_screen, (0, 0))
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 330))
         self.print_text(40, "Какой режим загрузить?", (780, 20))
-        self.render_button(100, 40, 900, 410, "1 VS 1", "load")
+        self.render_button(100, 40, 900, 410, "1 VS 1")
         self.render_button(100, 40, 900, 470, "Waves")
         self.render_button(130, 40, 900, 530, "Invasion")
+        self.render_button(100, 40, 870, 580, "Выход", "main_menu")
 
     def render_selection_map_window(self):
         screen.blit(main_screen, (0, 0))
