@@ -7,22 +7,24 @@ class Board:
         self.map = []
         self.location_my_castle = (0, 0)
         self.location_bot_castle = (0, 0)
-        self.player1 = [1000, 1000, 1000]
+        self.player1 = [10, 0, 0]
         self.builds_player1 = []
         self.edifice_player1 = []
-        self.player2 = [1000, 1000, 1000]
+        self.player2 = [10, 0, 0]
         self.builds_player2 = []
         self.edifice_player2 = []
         self.motion = 1
         self.alchemistry_stage_player1 = 0
         self.alchemistry_stage_player2 = 0
+        self.sawmill_stage_player1 = 0
+        self.sawmill_stage_player2 = 0
         self.castle_stage_player1 = 0
         self.castle_stage_player2 = 0
         self.edifice_functions = [self.house, self.sawmill, self.alchemistry, self.mine, self.smithy]
         self.house_place_player1 = 0
         self.house_place_player2 = 0
-        self.cords_for_sawmill = [(1, 0), (0, 1), (-1, 0), (0, -1)]
-        self.alchemistry_cost = [(10, 0, 0), (15, 10, -0), (20, 15, 10), "1Беги!!!1"]
+        self.sawmill_cost = [(7, 0, 0), (10, 2, 0), (15, 5, 2), "1Беги!!!1"]
+        self.alchemistry_cost = [(10, 0, 0), (15, 10, 0), (20, 15, 10), "1Беги!!!1"]
         self.warriors_cost = {"swordsman": (10, 0, 7)}
         self.castle_cost = [(25, 0, 0), (50, 0, 10), (100, 0, 30), "1Беги!!!1"]
         self.square_castle = [1, 2, 3, 4]
@@ -35,7 +37,6 @@ class Board:
 
     def load(self, lst_bool, lst_int, lst_lst, lst_map):
         """а тут автор умер от передоза наркомании которую предстоит ему тут написать"""
-
 
     def save(self, lst_int, lst_bool):
         lst_int.extend([self.motion, self.alchemistry_stage_player1, self.alchemistry_stage_player2, self.castle_stage_player1,
@@ -151,7 +152,7 @@ class Board:
 
     def sawmill(self, pos):
         cout_wood = 0
-        for elem in self.cords_for_sawmill:
+        for elem in self.move_swordsman:
             if self.map[pos[1] + elem[1]][pos[0] + elem[0]] == 1:
                 cout_wood += 1
         if self.motion == 2:
@@ -291,6 +292,12 @@ class Board:
             for j in range(32):
                 map[i][j] = int(map[i][j])
         return map
+
+    def load_text(self, filename):
+        file = open(filename, encoding="utf8", mode="r")
+        lines = file.readlines()
+        file.close()
+        return lines
 
 
 class Game:
@@ -543,7 +550,7 @@ class Game:
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
         self.render_button(240, 50, 825, 340, "Продолжить игру", "map_VS")
         self.render_button(240, 50, 825, 400, "Главное меню", "main_menu")
-        self.render_button(240, 50, 825, 460, "Сохранить", "save")
+        self.render_button(240, 50, 825, 460, "Сохранить")
         self.render_button(240, 50, 825, 520, "Настройки", "settings")
         click = pygame.mouse.get_pressed()
         mouse = pygame.mouse.get_pos()
@@ -559,9 +566,17 @@ class Game:
         self.render_button(135, 55, 250, 80, "1 VS 1", "maps", font_size=45)
         self.render_button(135, 55, 890, 80, "Waves", font_size=45)
         self.render_button(170, 55, 1500, 80, "Invasion", font_size=45)
-        self.print_text(30, "В бета тестировании", (110, 200))
-        self.print_text(30, "В разработке", (740, 200))
-        self.print_text(30, "В разработке", (1370, 200))
+        lst = ["description_1_VS_1", "description_waves", "description_invasion"]
+        x, y = 110, 175
+        for filename in lst:
+            text = self.board.load_text("texts/" + filename)
+            for i in range(len(text) - 1):
+                text[i] = text[i][:-1]
+            for elem in text:
+                self.print_text(30, elem, (x, y))
+                y += 35
+            y = 175
+            x += 630
 
     def render_load_mode_screen(self):
         screen.blit(main_screen, (0, 0))
@@ -679,6 +694,7 @@ class Game:
                 self.is_esc = True
 
     def course_change(self):
+        self.is_construction_window = False
         self.board.course_change(game.return_action_stage())
 
     def render_alchemistry_window(self):
@@ -801,4 +817,4 @@ while running:
     clock.tick(fps)
     pygame.display.flip()
 """После улутшения чего либо окно строительства открывается после Второго клика"""
-"""Появилась проблема с мечниками он второго мечника убил за один раз хотя должен за два нужно отловить момент сбоя"""
+"""Можно построить здание на чужом пространстве"""
