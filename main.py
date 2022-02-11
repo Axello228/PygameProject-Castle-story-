@@ -1,5 +1,4 @@
 import pygame
-import random
 
 
 class Board:
@@ -36,7 +35,14 @@ class Board:
         self.past_pos = (0, 0)
         self.dict_builds = {"Замок": [self.get_castle_stage, self.castle_cost, (880, 220), "up_castle", [(12, 0, 0), (25, 0, 5), (100, 0, 30), (100, 0, 30)]],
                             "Алхимическая палатка": [self.get_alchemistry_stage, self.alchemistry_cost, (760, 220), "up_alchemistry", [(5, 0, 0), (7, 5, 0), (10, 7, 5), (10, 7, 5)]],
-                            "Кузня": [["Мечник"], [self.warriors_cost["swordsman"]], (820, 220), ["swordsman"]]}
+                            "Кузня": [["Мечник"], [self.warriors_cost["swordsman"]], (820, 220), ["swordsman"]],
+                            "Лесопилка": [self.get_sawmill_stage, self.sawmill_cost, (840, 220), "up_sawmill", [(3, 0, 0), (5, 1, 0), (7, 2, 1), (7, 2, 1)]]}
+
+    def get_sawmill_stage(self):
+        if self.motion == 1:
+            return self.sawmill_stage_player1
+        else:
+            return self.sawmill_stage_player2
 
     def destroy_build(self):
         pass
@@ -162,9 +168,9 @@ class Board:
             if self.map[pos[1] + elem[1]][pos[0] + elem[0]] == 1:
                 cout_wood += 1
         if self.motion == 2:
-            self.player1[0] += cout_wood
+            self.player1[0] += cout_wood * (self.sawmill_stage_player1 + 1)
         else:
-            self.player2[0] += cout_wood
+            self.player2[0] += cout_wood * (self.sawmill_stage_player2 + 1)
 
     def mine(self, pos):
         if self.motion == 2:
@@ -208,15 +214,42 @@ class Board:
         else:
             player = self.player2
             alchemistry_stage = self.alchemistry_stage_player2
+        is_ok = True
         for i in range(3):
-            player[i] -= self.alchemistry_cost[alchemistry_stage][i]
-        alchemistry_stage += 1
+            if player[i] - self.alchemistry_cost[alchemistry_stage][i] < 0:
+                is_ok = False
+        if is_ok:
+            for i in range(3):
+                player[i] -= self.alchemistry_cost[alchemistry_stage][i]
+            alchemistry_stage += 1
         if self.motion == 1:
             self.player1 = player
             self.alchemistry_stage_player1 += 1
         else:
             self.player2 = player
             self.alchemistry_stage_player2 += 1
+
+    def up_sawmill(self):
+        if self.motion == 1:
+            player = self.player1
+            sawmill_stage = self.sawmill_stage_player1
+        else:
+            player = self.player2
+            sawmill_stage = self.sawmill_stage_player2
+        is_ok = True
+        for i in range(3):
+            if player[i] - self.sawmill_cost[sawmill_stage][i] < 0:
+                is_ok = False
+        if is_ok:
+            for i in range(3):
+                player[i] -= self.sawmill_cost[sawmill_stage][i]
+            sawmill_stage += 1
+        if self.motion == 1:
+            self.player1 = player
+            self.sawmill_stage_player1 += 1
+        else:
+            self.player1 = player
+            self.sawmill_stage_player2 += 1
 
     def cost_construction(self, build):
         if self.motion == 1:
@@ -318,7 +351,7 @@ class Game:
         self.cout_amogus_fleks = 0
         self.resources = ["Дерево: ", "Руда: ", "Слитки: "]
         self.actions_in_the_game = {"up_alchemistry": self.up_alchemistry, "exit_windows": self.off_all_windows,
-                                    'exit': self.exit, "up_castle": self.up_castle}
+                                    'exit': self.exit, "up_castle": self.up_castle, "up_sawmill": self.up_sawmill}
         self.past_action_stage = "main_menu"
         self.action_stage = "main_menu"
         self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
@@ -338,6 +371,11 @@ class Game:
         self.board = Board()
         self.is_win_window = False
         self.action_window = None
+
+    def up_sawmill(self):
+        if self.is_sounds:
+            pass
+        self.board.up_sawmill()
 
     def off_all_windows(self):
         self.action_window = None
@@ -418,6 +456,8 @@ class Game:
                 self.action_window = "Castle"
             if self.board.map[self.board.pos[1]][self.board.pos[0]] == 3 and self.board.motion == 2:
                 self.action_window = "Castle"
+            if self.board.map[self.board.pos[1]][self.board.pos[0]] == 17 and is_ok:
+                self.action_window = "Sawmill"
             if (self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 14 or self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 15) and self.board.motion == 1 or (self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 13 or self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 12) and self.board.motion == 2:
                 if self.board.motion == 1:
                     army = self.board.army_player1
@@ -438,31 +478,18 @@ class Game:
                             if self.board.past_pos[0] + pos[0] == self.board.pos[0] and self.board.past_pos[1] + pos[1] == self.board.pos[1]:
                                 is_move = True
                         if self.board.map[self.board.pos[1]][self.board.pos[0]] == 0 and is_move:
-                            random_sound = random.randint(0, 100)
-                            sound = r'sounds\go.mp3'
-                            if random_sound == 68:
-                                sound = r"sounds\monolit.mp3"
-                            warior.move(self.board.pos, self.board.past_pos, self.board.motion, self.is_sounds, pygame.mixer.Sound(sound), self.board.map)
+                            warior.move(self.board.pos, self.board.past_pos, self.board.motion, self.is_sounds, pygame.mixer.Sound(r'sounds\go.mp3'), self.board.map)
                         if self.board.map[self.board.pos[1]][self.board.pos[0]] == self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] and warior.go:
                             warior.treatment(self.is_sounds, pygame.mixer.Sound(r'sounds\healing.mp3'))
                         if self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] in a and self.board.map[self.board.pos[1]][self.board.pos[0]] in b and is_move:
                             i = 0
                             while i < len(arm):
                                 if arm[i].pos == self.board.pos:
-                                    random_sound = random.randint(0, 100)
-                                    sound = r'sounds\hit.mp3'
-                                    if random_sound == 87:
-                                        sound = r"sounds\toporik.mp3"
-                                    warior.hit(self.is_sounds, pygame.mixer.Sound(sound))
+                                    warior.hit(self.is_sounds, pygame.mixer.Sound(r'sounds\hit.mp3'))
                                     arm[i].damage()
                                     if arm[i].death:
                                         self.board.map[arm[i].pos[1]][arm[i].pos[0]] = 0
                                         del arm[i]
-                                        random_sound = random.randint(0, 100)
-                                        if random_sound == 28:
-                                            pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds\maslina.mp3'))
-                                        elif random_sound == 49:
-                                            pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds\come_back.mp3'))
                                 i += 1
                         if self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] in a and self.board.pos == castle and is_move:
                             self.is_win_window = True
@@ -533,6 +560,8 @@ class Game:
             self.render_buildings_window(True, False, "Замок")
         if self.is_win_window:
             self.render_win_window()
+        if self.action_window == "Sawmill":
+            self.render_buildings_window(True, True, "Лесопилка")
 
     def render_buildings_window(self, is_up, is_dest, name_build):
         lst = self.board.dict_builds[name_build]
