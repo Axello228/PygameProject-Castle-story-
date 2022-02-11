@@ -34,6 +34,12 @@ class Board:
         self.move_swordsman = [(1, 0), (0, 1), (1, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1)]
         self.pos = (0, 0)
         self.past_pos = (0, 0)
+        self.dict_builds = {"Замок": [self.get_castle_stage, self.castle_cost, (880, 220), "up_castle", [(12, 0, 0), (25, 0, 5), (100, 0, 30), (100, 0, 30)]],
+                            "Алхимическая палатка": [self.get_alchemistry_stage, self.alchemistry_cost, (760, 220), "up_alchemistry", [(5, 0, 0), (7, 5, 0), (10, 7, 5), (10, 7, 5)]],
+                            "Кузня": [["Мечник"], [self.warriors_cost["swordsman"]], (820, 220), ["swordsman"]]}
+
+    def destroy_build(self):
+        pass
 
     def load(self, lst_bool, lst_int, lst_lst, lst_map):
         """а тут автор умер от передоза наркомании которую предстоит ему тут написать"""
@@ -311,9 +317,8 @@ class Game:
         self.amogus_fleks = [r"textures\amogus1.jpg", r"textures\amogus2.jpg", r"textures\amogus3.jpg", r"textures\amogus4.jpg", r"textures\amogus5.jpg", r"textures\amogus6.jpg"]
         self.cout_amogus_fleks = 0
         self.resources = ["Дерево: ", "Руда: ", "Слитки: "]
-        self.actions_in_the_game = {"up_alchemistry": self.up_alchemistry, "exit_alchemistry": self.off_alchemistry_window,
-                                    'exit': self.exit, "up_castle": self.up_castle, "exit_smithy": self.off_smithy_window,
-                                    "exit_castle": self.off_castle_window}
+        self.actions_in_the_game = {"up_alchemistry": self.up_alchemistry, "exit_windows": self.off_all_windows,
+                                    'exit': self.exit, "up_castle": self.up_castle}
         self.past_action_stage = "main_menu"
         self.action_stage = "main_menu"
         self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
@@ -327,15 +332,15 @@ class Game:
         self.build_warriors = {"swordsman": self.build_swordsman}
         self.active_clr = (204, 229, 255)
         self.is_construction_window = False
-        self.is_alchemistry_window = False
         self.is_sounds = True
         self.is_esc = False
         self.exit = False
-        self.is_smithy_window = False
         self.board = Board()
-        self.is_castle_window = False
-        self.is_warior_window = False
         self.is_win_window = False
+        self.action_window = None
+
+    def off_all_windows(self):
+        self.action_window = None
 
     def load(self):
         file = open("saves_and_loads\\1_VS_1", encoding="utf8", mode="r")
@@ -364,17 +369,8 @@ class Game:
         mouse = pygame.mouse.get_pos()
         return mouse[0] // 60, mouse[1] // 60
 
-    def off_castle_window(self):
-        self.is_castle_window = False
-
-    def off_smithy_window(self):
-        self.is_smithy_window = False
-
     def exit(self):
         self.exit = True
-
-    def off_alchemistry_window(self):
-        self.is_alchemistry_window = False
 
     def up_castle(self):
         if self.is_sounds:
@@ -414,20 +410,15 @@ class Game:
                     self.is_construction_window = True
             elif pygame.mouse.get_pos()[0] > 380 or pygame.mouse.get_pos()[1] > 490:
                 self.is_construction_window = False
-            if self.board.map[self.board.pos[1]][self.board.pos[0]] == 18 and not self.is_alchemistry_window and is_ok:
-                self.alchemistry_pos = self.get_cell()
-                self.is_alchemistry_window = True
-            if self.board.map[self.board.pos[1]][self.board.pos[0]] == 20 and not self.is_smithy_window and is_ok:
-                self.smithy_pos = self.get_cell()
-                self.is_smithy_window = True
+            if self.board.map[self.board.pos[1]][self.board.pos[0]] == 18 and is_ok:
+                self.action_window = "Alchemistry"
+            if self.board.map[self.board.pos[1]][self.board.pos[0]] == 20 and is_ok:
+                self.action_window = "Smithy"
             if self.board.map[self.board.pos[1]][self.board.pos[0]] == 2 and self.board.motion == 1:
-                self.castle_pos = self.board.location_my_castle
-                self.is_castle_window = True
+                self.action_window = "Castle"
             if self.board.map[self.board.pos[1]][self.board.pos[0]] == 3 and self.board.motion == 2:
-                self.castle_pos = self.board.location_bot_castle
-                self.is_castle_window = True
+                self.action_window = "Castle"
             if (self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 14 or self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 15) and self.board.motion == 1 or (self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 13 or self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 12) and self.board.motion == 2:
-                self.is_warior_window = True
                 if self.board.motion == 1:
                     army = self.board.army_player1
                     arm = self.board.army_player2
@@ -475,9 +466,6 @@ class Game:
                                 i += 1
                         if self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] in a and self.board.pos == castle and is_move:
                             self.is_win_window = True
-
-    def off_warior_window(self):
-        self.is_warior_window = False
 
     def render(self):
         self.render_functions[self.action_stage]()
@@ -537,14 +525,50 @@ class Game:
         game.print_text(40, "Ход игрока №" + str(self.board.motion), (x + 100, y))
         if self.is_construction_window:
             self.render_construction_window(self.board.selection_cell)
-        if self.is_alchemistry_window:
-            self.render_alchemistry_window()
-        if self.is_smithy_window:
-            self.render_smithy_window()
-        if self.is_castle_window:
-            self.render_castle_window()
+        if self.action_window == "Alchemistry":
+            self.render_buildings_window(True, True, "Алхимическая палатка")
+        if self.action_window == "Smithy":
+            self.render_buildings_window(False, False, "Кузня")
+        if self.action_window == "Castle":
+            self.render_buildings_window(True, False, "Замок")
         if self.is_win_window:
             self.render_win_window()
+
+    def render_buildings_window(self, is_up, is_dest, name_build):
+        lst = self.board.dict_builds[name_build]
+        cords = lst[2]
+        x, y = 780, 290
+        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (600, 700)), (640, 140))
+        self.print_text(35, name_build, cords)
+        if name_build == "Кузня":
+            names = lst[0]
+            costs = lst[1]
+            build = lst[3]
+            for i in range(len(names)):
+                self.render_button(140, 45, x, y, names[i], build[i])
+                y += 60
+                self.print_text(30, "Стоимость: " + str(costs[i])[1:-1], (x + 5, y))
+                y += 60
+        if is_up:
+            stage = lst[0]()
+            cost = lst[1]
+            if stage < 3:
+                self.print_text(30, "Уроверь: " + str(stage), (x + 5, y))
+                y += 50
+                self.render_button(140, 45, x, y, "Улучшить", lst[3])
+                y += 50
+                self.print_text(30, "Стоимость: " + str(cost[stage])[1:-1], (x + 5, y))
+                y += 50
+            else:
+                self.print_text(30, "Максимальный уровень", (x + 5, y))
+                y += 50
+        if is_dest:
+            dest = lst[4][stage]
+            self.render_button(140, 45, x, y, "Снести")
+            y += 50
+            self.print_text(30, "Стоимость: " + str(dest)[1:-1], (x + 5, y))
+            y += 50
+        self.render_button(140, 45, x, y, "Выход", "exit_windows")
 
     def render_esc_window(self):
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
@@ -606,13 +630,10 @@ class Game:
     def new_game(self):
         self.cout_amogus_fleks = 0
         self.is_construction_window = False
-        self.is_alchemistry_window = False
+        self.action_window = None
         self.is_sounds = True
         self.is_esc = False
         self.exit = False
-        self.is_smithy_window = False
-        self.is_castle_window = False
-        self.is_warior_window = False
         self.is_win_window = False
         self.board.new_game()
         self.past_action_stage = self.action_stage
@@ -694,42 +715,12 @@ class Game:
                 self.is_esc = True
 
     def course_change(self):
+        self.action_window =None
         self.is_construction_window = False
         self.board.course_change(game.return_action_stage())
 
-    def render_alchemistry_window(self):
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 365))
-        if self.board.get_alchemistry_stage() != 3:
-            self.render_button(120, 35, 890, 445, "Улучшить", "up_alchemistry", font_size=25)
-            self.print_text(25, "Стоимость:", (890, 485))
-            self.print_text(25, "Уровень: " + str(self.board.get_alchemistry_stage()), (890, 565))
-            self.print_text(25, str(self.board.alchemistry_cost[self.board.get_alchemistry_stage()])[1:-1], (890, 525))
-        else:
-            self.print_text(25, "Максимальный", (880, 445))
-            self.print_text(25, "уровень", (880, 485))
-        self.render_button(100, 35, 890, 605, "Выход", "exit_alchemistry", font_size=25)
-
-    def render_smithy_window(self):
-        if self.board.get_alchemistry_stage() == 3:
-            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 365))
-            self.render_button(120, 35, 890, 435, "Мечник", "swordsman", font_size=25)
-            self.print_text(25, "Цена: " + str(self.board.warriors_cost["swordsman"])[1:-1], (890, 475))
-            self.render_button(100, 35, 890, 605, "Выход", "exit_smithy", font_size=25)
-
-    def render_castle_window(self):
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 365))
-        if self.board.get_castle_stage() < 3:
-            self.render_button(120, 35, 880, 435, "Улучшить", "up_castle", font_size=25)
-            self.print_text(25, "Стоимость:", (885, 470))
-            self.print_text(25, str(self.board.castle_cost[self.board.get_castle_stage()])[1:-1], (885, 505))
-            self.print_text(25, "Уровень: " + str(self.board.get_castle_stage()), (885, 540))
-        else:
-            self.print_text(25, "Максимальный", (885, 445))
-            self.print_text(25, "уровень", (885, 485))
-        self.render_button(120, 35, 880, 575, "Выход", "exit_castle", font_size=25)
-
     def build_swordsman(self):
-        self.off_smithy_window()
+        self.off_all_windows()
         self.board.build_swordsman()
 
     def render_win_window(self):
@@ -817,4 +808,3 @@ while running:
     clock.tick(fps)
     pygame.display.flip()
 """После улутшения чего либо окно строительства открывается после Второго клика"""
-"""Можно построить здание на чужом пространстве"""
