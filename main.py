@@ -420,7 +420,7 @@ class Game:
         self.action_window = None
 
     def load(self):
-        file = open("saves_and_loads\\1_VS_1", encoding="utf8", mode="r")
+        file = open("saves_and_loads\\1_VS_1", encoding="utf8", mode="r") # hifb
         lines = file.readlines()
         file.close()
         lst_bool = lines[0][:-1].split("; ")
