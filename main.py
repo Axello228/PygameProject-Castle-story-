@@ -389,11 +389,12 @@ class Game:
         self.action_stage = "main_menu"
         self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
                     "map_VS": self.render_map_VS, "settings": self.render_settings_window, "maps": self.render_selection_map_window,
-                                 "load_selection": self.render_load_mode_screen, "training": self.render_training_screen}
+                                 "load_selection": self.render_load_mode_screen, "training_page0": self.render_training_screen}
         self.building = {"house": [16, 20, 0, 5], "sawmill": [17, 5, 0, 0], "alchemistry": [18, 10, 0, 0],
                          "mine": [19, 15, 0, 0], "smithy": [20, 20, 10, 0]}
         self.settings = {"on_music": self.on_soundtrack, "off_music": self.off_sondtrack, "on_sounds": self.on_sounds,
                          "off_sounds": self.off_sounds}
+        self.trannings = {"left": self.left_arrow, "right": self.right_arrow}
         self.loads = {"isle": self.load_isle, "forest": self.load_forest, "save": self.save, "load": self.load}
         self.build_warriors = {"swordsman": self.build_swordsman}
         self.active_clr = (204, 229, 255)
@@ -570,6 +571,8 @@ class Game:
                     self.build_warriors[stage]()
                 if stage in self.loads:
                     self.loads[stage]()
+                if stage in self.trannings:
+                    self.trannings[stage]()
         self.print_text(font_size, message, (x + 5, y + 5))
 
     def return_action_stage(self):
@@ -717,7 +720,7 @@ class Game:
         self.render_button(250, 45, 850, 400, "Начать новую игру", "mode_selection")
         self.render_button(250, 45, 850, 450, "Загрузить игру", "load_selection")
         self.render_button(250, 45, 850, 500, "Настройки", "settings")
-        self.render_button(250, 45, 850, 550, "Обучение", "training")
+        self.render_button(250, 45, 850, 550, "Обучение", "training_page0")
         self.render_button(170, 45, 850, 600, "Выход", "exit")
 
     def print_text(self, size, message, location, color=(0, 0, 0), fnt='serif'):
@@ -726,13 +729,25 @@ class Game:
     def render_training_screen(self):
         screen.blit(main_screen, (0, 0))
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (1200, 1200)), (350, -90))
-        text = self.board.load_text("texts/" + "training")
+        text = self.board.load_text("texts/" + "training_page" + str(self.stage_traning_window))
+        if self.stage_traning_window != 0:
+            self.render_button(70, 60, 595, 915, "", "right")
+            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\arrow_left.png"), (60, 50)), (600, 920))
+        if True:
+            self.render_button(70, 60, 1245, 915, "", "left")
+            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\arrow_right.png"), (60, 50)), (1250, 920))
         for i in range(len(text) - 1):
             text[i] = text[i][:-1]
-        y = 150
+        y = 180
         for elem in text:
             self.print_text(30, elem, (620, y))
             y += 35
+
+    def right_arrow(self):
+        self.stage_traning_window -= 1
+
+    def left_arrow(self):
+        self.stage_traning_window += 1
 
     def render_construction_window(self, pos):
         if self.board.map[pos[1]][pos[0]] == 0:
