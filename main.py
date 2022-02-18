@@ -19,9 +19,12 @@ class Board:
         self.sawmill_stage_player2 = 0
         self.castle_stage_player1 = 0
         self.castle_stage_player2 = 0
+        self.mine_stage_player1 = 0
+        self.mine_stage_player2 = 0
         self.edifice_functions = [self.house, self.sawmill, self.alchemistry, self.mine, self.smithy]
         self.house_place_player1 = 0
         self.house_place_player2 = 0
+        self.mine_cost = [(10, 0, 0), (15, 5, 0), (20, 0, 5), "1Беги!!!1"]
         self.sawmill_cost = [(7, 0, 0), (10, 2, 0), (15, 5, 2), "1Беги!!!1"]
         self.alchemistry_cost = [(10, 0, 0), (15, 10, 0), (20, 15, 10), "1Беги!!!1"]
         self.warriors_cost = {"swordsman": (10, 0, 7)}
@@ -36,7 +39,14 @@ class Board:
         self.dict_builds = {"Замок": [self.get_castle_stage, self.castle_cost, (880, 220), "up_castle", [(12, 0, 0), (25, 0, 5), (100, 0, 30), (100, 0, 30)]],
                             "Алхимическая палатка": [self.get_alchemistry_stage, self.alchemistry_cost, (760, 220), "up_alchemistry", [(5, 0, 0), (7, 5, 0), (10, 7, 5), (10, 7, 5)]],
                             "Кузня": [["Мечник"], [self.warriors_cost["swordsman"]], (820, 220), ["swordsman"]],
-                            "Лесопилка": [self.get_sawmill_stage, self.sawmill_cost, (840, 220), "up_sawmill", [(3, 0, 0), (5, 1, 0), (7, 2, 1), (7, 2, 1)]]}
+                            "Лесопилка": [self.get_sawmill_stage, self.sawmill_cost, (840, 220), "up_sawmill", [(3, 0, 0), (5, 1, 0), (7, 2, 1), (7, 2, 1)]],
+                            "Шахта": [self.get_mine_satage, self.mine_cost, (820, 220), "up_mine", [(5, 0, 0), (7, 2, 0), (10, 0, 2), (10, 0, 2)]]}
+
+    def get_mine_satage(self):
+        if self.motion == 1:
+            return self.mine_stage_player1
+        else:
+            return self.mine_stage_player2
 
     def get_sawmill_stage(self):
         if self.motion == 1:
@@ -174,9 +184,9 @@ class Board:
 
     def mine(self, pos):
         if self.motion == 2:
-            self.player1[1] += 1
+            self.player1[1] += 1 * (self.mine_stage_player1 + 1)
         else:
-            self.player2[1] += 1
+            self.player2[1] += 1 * (self.mine_stage_player2 + 1)
 
     def smithy(self, pos):
         if self.motion == 1:
@@ -228,6 +238,28 @@ class Board:
         else:
             self.player2 = player
             self.alchemistry_stage_player2 += 1
+
+    def up_mine(self):
+        if self.motion == 1:
+            player = self.player1
+            mine_stage = self.mine_stage_player1
+        else:
+            player = self.player2
+            mine_stage = self.mine_stage_player2
+        is_ok = True
+        for i in range(3):
+            if player[i] - self.mine_cost[mine_stage][i] < 0:
+                is_ok = False
+        if is_ok:
+            for i in range(3):
+                player[i] -= self.mine_cost[mine_stage][i]
+            mine_stage += 1
+        if self.motion == 1:
+            self.player1 = player
+            self.mine_stage_player1 = mine_stage
+        else:
+            self.player2 = player
+            self.mine_stage_player2 = mine_stage
 
     def up_sawmill(self):
         if self.motion == 1:
@@ -351,12 +383,13 @@ class Game:
         self.cout_amogus_fleks = 0
         self.resources = ["Дерево: ", "Руда: ", "Слитки: "]
         self.actions_in_the_game = {"up_alchemistry": self.up_alchemistry, "exit_windows": self.off_all_windows,
-                                    'exit': self.exit, "up_castle": self.up_castle, "up_sawmill": self.up_sawmill}
+                                    'exit': self.exit, "up_castle": self.up_castle, "up_sawmill": self.up_sawmill,
+                                    "up_mine": self.up_mine}
         self.past_action_stage = "main_menu"
         self.action_stage = "main_menu"
         self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
                     "map_VS": self.render_map_VS, "settings": self.render_settings_window, "maps": self.render_selection_map_window,
-                                 "load_selection": self.render_load_mode_screen}
+                                 "load_selection": self.render_load_mode_screen, "training": self.render_training_screen}
         self.building = {"house": [16, 20, 0, 5], "sawmill": [17, 5, 0, 0], "alchemistry": [18, 10, 0, 0],
                          "mine": [19, 15, 0, 0], "smithy": [20, 20, 10, 0]}
         self.settings = {"on_music": self.on_soundtrack, "off_music": self.off_sondtrack, "on_sounds": self.on_sounds,
@@ -371,10 +404,16 @@ class Game:
         self.board = Board()
         self.is_win_window = False
         self.action_window = None
+        self.stage_traning_window = 0
+
+    def up_mine(self):
+        if self.is_sounds:
+            pygame.mixer.Sound.play(pygame.mixer.Sound(r"sounds/up_mine.mp3"))
+        self.board.up_mine()
 
     def up_sawmill(self):
         if self.is_sounds:
-            pass
+            pygame.mixer.Sound.play(pygame.mixer.Sound(r"sounds/up_sawmill.mp3"))
         self.board.up_sawmill()
 
     def off_all_windows(self):
@@ -458,6 +497,8 @@ class Game:
                 self.action_window = "Castle"
             if self.board.map[self.board.pos[1]][self.board.pos[0]] == 17 and is_ok:
                 self.action_window = "Sawmill"
+            if self.board.map[self.board.pos[1]][self.board.pos[0]] == 19 and is_ok:
+                self.action_window = "Mine"
             if (self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 14 or self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 15) and self.board.motion == 1 or (self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 13 or self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 12) and self.board.motion == 2:
                 if self.board.motion == 1:
                     army = self.board.army_player1
@@ -562,6 +603,8 @@ class Game:
             self.render_win_window()
         if self.action_window == "Sawmill":
             self.render_buildings_window(True, True, "Лесопилка")
+        if self.action_window == "Mine":
+            self.render_buildings_window(True, True, "Шахта")
 
     def render_buildings_window(self, is_up, is_dest, name_build):
         lst = self.board.dict_builds[name_build]
@@ -569,7 +612,7 @@ class Game:
         x, y = 780, 290
         screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (600, 700)), (640, 140))
         self.print_text(35, name_build, cords)
-        if name_build == "Кузня":
+        if name_build == "Кузня" and  self.board.get_alchemistry_stage() >= 3:
             names = lst[0]
             costs = lst[1]
             build = lst[3]
@@ -674,10 +717,22 @@ class Game:
         self.render_button(250, 45, 850, 400, "Начать новую игру", "mode_selection")
         self.render_button(250, 45, 850, 450, "Загрузить игру", "load_selection")
         self.render_button(250, 45, 850, 500, "Настройки", "settings")
-        self.render_button(250, 45, 850, 550, "Выход", "exit")
+        self.render_button(250, 45, 850, 550, "Обучение", "training")
+        self.render_button(170, 45, 850, 600, "Выход", "exit")
 
     def print_text(self, size, message, location, color=(0, 0, 0), fnt='serif'):
         screen.blit(pygame.font.SysFont(fnt, size).render(message, True, color), location)
+
+    def render_training_screen(self):
+        screen.blit(main_screen, (0, 0))
+        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (1200, 1200)), (350, -90))
+        text = self.board.load_text("texts/" + "training")
+        for i in range(len(text) - 1):
+            text[i] = text[i][:-1]
+        y = 150
+        for elem in text:
+            self.print_text(30, elem, (620, y))
+            y += 35
 
     def render_construction_window(self, pos):
         if self.board.map[pos[1]][pos[0]] == 0:
@@ -744,7 +799,7 @@ class Game:
                 self.is_esc = True
 
     def course_change(self):
-        self.action_window =None
+        self.action_window = None
         self.is_construction_window = False
         self.board.course_change(game.return_action_stage())
 
