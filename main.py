@@ -733,9 +733,10 @@ class Game:
         if self.stage_traning_window != 0:
             self.render_button(70, 60, 595, 915, "", "right")
             screen.blit(pygame.transform.scale(pygame.image.load(r"textures\arrow_left.png"), (60, 50)), (600, 920))
-        if True:
-            self.render_button(70, 60, 1245, 915, "", "left")
-            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\arrow_right.png"), (60, 50)), (1250, 920))
+        if self.stage_traning_window != 11:
+            self.render_button(70, 60, 1235, 915, "", "left")
+            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\arrow_right.png"), (60, 50)), (1240, 920))
+        self.render_button(200, 50, 850, 915, "Главное меню", "main_menu")
         for i in range(len(text) - 1):
             text[i] = text[i][:-1]
         y = 180
