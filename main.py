@@ -58,7 +58,7 @@ class Board:
         pass
 
     def load(self, lst_bool, lst_int, lst_lst, lst_map):
-        """а тут автор умер от передоза наркомании которую предстоит ему тут написать"""
+        """aа тут автор умер от передоза наркомании которую предстоит ему тут написать"""
 
     def save(self, lst_int, lst_bool):
         lst_int.extend([self.motion, self.alchemistry_stage_player1, self.alchemistry_stage_player2, self.castle_stage_player1,
