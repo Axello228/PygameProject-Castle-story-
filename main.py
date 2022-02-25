@@ -373,13 +373,24 @@ class Board:
 
 class Game:
     def __init__(self):
-        self.lst_textures = ["textures\\field.png", "textures\\forest.png", "textures\my_castle.png", "textures\\bot_castle.png",
-                "textures\\north_beach.png", "textures\south_beach.png", "textures\east_beach.png",
-                "textures\west_beach.png", "textures\\nw_beach.png", "textures\\ne_beach.png", "textures\se_beach.png",
-                "textures\sw_beach.png", "textures\\bot_swordsman_r.png", "textures\\bot_swordsman_l.png",
-                "textures\my_swordsman_r.png", "textures\my_swordsman_l.png", "textures\house.png", "textures\sawmill.png",
-                "textures\\alchemistry.png", "textures\mine.png", "textures\smithy.png", "textures\\byilding_table.png"]
-        self.amogus_fleks = [r"textures\amogus1.jpg", r"textures\amogus2.jpg", r"textures\amogus3.jpg", r"textures\amogus4.jpg", r"textures\amogus5.jpg", r"textures\amogus6.jpg"]
+        self.button_sound = pygame.mixer.Sound(r'sounds\button_click.wav')
+        self.lst_textures = [pygame.image.load("textures\\field.png"), pygame.image.load("textures\\forest.png"),
+                             pygame.image.load("textures\my_castle.png"), pygame.image.load("textures\\bot_castle.png"),
+                             pygame.image.load("textures\\north_beach.png"), pygame.image.load("textures\south_beach.png"),
+                             pygame.image.load("textures\east_beach.png"), pygame.image.load("textures\west_beach.png"),
+                             pygame.image.load("textures\\nw_beach.png"), pygame.image.load("textures\\ne_beach.png"),
+                             pygame.image.load("textures\se_beach.png"), pygame.image.load("textures\sw_beach.png"),
+                             pygame.image.load("textures\\bot_swordsman_r.png"), pygame.image.load("textures\\bot_swordsman_l.png"),
+                             pygame.image.load("textures\my_swordsman_r.png"), pygame.image.load("textures\my_swordsman_l.png"),
+                             pygame.image.load("textures\house.png"), pygame.image.load("textures\sawmill.png"),
+                             pygame.image.load("textures\\alchemistry.png"), pygame.image.load("textures\mine.png"),
+                             pygame.image.load("textures\smithy.png"), pygame.image.load("textures\\byilding_table.png"),]
+        self.amogus_fleks = [pygame.transform.scale(pygame.image.load(r"textures\amogus1.jpg"), (200, 150)),
+                             pygame.transform.scale(pygame.image.load(r"textures\amogus2.jpg"), (200, 150)),
+                             pygame.transform.scale(pygame.image.load(r"textures\amogus3.jpg"), (200, 150)),
+                             pygame.transform.scale(pygame.image.load(r"textures\amogus4.jpg"), (200, 150)),
+                             pygame.transform.scale(pygame.image.load(r"textures\amogus5.jpg"), (200, 150)),
+                             pygame.transform.scale(pygame.image.load(r"textures\amogus6.jpg"), (200, 150))]
         self.cout_amogus_fleks = 0
         self.resources = ["Дерево: ", "Руда: ", "Слитки: "]
         self.actions_in_the_game = {"up_alchemistry": self.up_alchemistry, "exit_windows": self.off_all_windows,
@@ -387,9 +398,13 @@ class Game:
                                     "up_mine": self.up_mine}
         self.past_action_stage = "main_menu"
         self.action_stage = "main_menu"
-        self.render_functions = {"main_menu": self.render_home_screen, "mode_selection": self.render_mode_selection_screen,
-                    "map_VS": self.render_map_VS, "settings": self.render_settings_window, "maps": self.render_selection_map_window,
-                                 "load_selection": self.render_load_mode_screen, "training_page0": self.render_training_screen}
+        self.render_functions = {"main_menu": self.render_home_screen,
+                                 "mode_selection": self.render_mode_selection_screen,
+                                 "map_VS": self.render_map_VS, "settings": self.render_settings_window,
+                                 "maps": self.render_selection_map_window,
+                                 "load_selection": self.render_load_mode_screen,
+                                 "training_page0": self.render_training_screen,
+                                 "custom_maps": self.render_custom_maps_window}
         self.building = {"house": [16, 20, 0, 5], "sawmill": [17, 5, 0, 0], "alchemistry": [18, 10, 0, 0],
                          "mine": [19, 15, 0, 0], "smithy": [20, 20, 10, 0]}
         self.settings = {"on_music": self.on_soundtrack, "off_music": self.off_sondtrack, "on_sounds": self.on_sounds,
@@ -406,6 +421,27 @@ class Game:
         self.is_win_window = False
         self.action_window = None
         self.stage_traning_window = 0
+        self.scroll_win = pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500))
+        self.scroll_builds = pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (600, 700))
+        self.scroll_esc = pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500))
+        self.scroll_mode_selection = pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (800, 1100))
+        self.texts_mode_selection = [self.board.load_text("texts/description_1_VS_1"),
+                                     self.board.load_text("texts/description_waves"),
+                                     self.board.load_text("texts/description_invasion")]
+        for text in self.texts_mode_selection:
+            for i in range(len(text) - 1):
+                text[i] = text[i][:-1]
+        self.scroll_load_mode = pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350))
+        self.image_isle_map = pygame.transform.scale(pygame.image.load(r"textures\isle_screen.PNG"), (576, 324))
+        self.image_forest_map = pygame.transform.scale(pygame.image.load(r"textures\forest_screen.PNG"), (576, 324))
+        self.scroll_home = pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (470, 450))
+        self.scroll_training = pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (1200, 1200))
+        self.image_arrow_left = pygame.transform.scale(pygame.image.load(r"textures\arrow_left.png"), (60, 50))
+        self.image_arrow_right = pygame.transform.scale(pygame.image.load(r"textures\arrow_right.png"), (60, 50))
+        self.scroll_settings = pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (580, 600))
+        self.main_screen = pygame.transform.scale(pygame.image.load(r"textures\background.jpg"), (1920, 1080))
+        self.construction_window_screen = pygame.transform.scale(pygame.image.load(
+            r"textures\background_construction_window.PNG"), (400, 1080))
 
     def up_mine(self):
         if self.is_sounds:
@@ -421,7 +457,7 @@ class Game:
         self.action_window = None
 
     def load(self):
-        file = open("saves_and_loads\\1_VS_1", encoding="utf8", mode="r") # hifb
+        file = open("saves_and_loads\\1_VS_1", encoding="utf8", mode="r")
         lines = file.readlines()
         file.close()
         lst_bool = lines[0][:-1].split("; ")
@@ -500,7 +536,10 @@ class Game:
                 self.action_window = "Sawmill"
             if self.board.map[self.board.pos[1]][self.board.pos[0]] == 19 and is_ok:
                 self.action_window = "Mine"
-            if (self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 14 or self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 15) and self.board.motion == 1 or (self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 13 or self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 12) and self.board.motion == 2:
+            if (self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] == 14 or self.board.map[
+                self.board.past_pos[1]][self.board.past_pos[0]] == 15)and self.board.motion == 1 or (self.board.map[
+                self.board.past_pos[1]][self.board.past_pos[0]] == 13 or self.board.map[self.board.past_pos[1]][
+                self.board.past_pos[0]] == 12) and self.board.motion == 2:
                 if self.board.motion == 1:
                     army = self.board.army_player1
                     arm = self.board.army_player2
@@ -535,6 +574,8 @@ class Game:
                                 i += 1
                         if self.board.map[self.board.past_pos[1]][self.board.past_pos[0]] in a and self.board.pos == castle and is_move:
                             self.is_win_window = True
+        if self.return_action_stage() == "custom_maps":
+            pass
 
     def render(self):
         self.render_functions[self.action_stage]()
@@ -548,7 +589,7 @@ class Game:
             pygame.draw.rect(screen, self.active_clr, (x, y, width, height))
             if click[0] == 1:
                 if self.is_sounds:
-                    pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds\button_click.wav'))
+                    pygame.mixer.Sound.play(self.button_sound)
                 pygame.time.delay(150)
                 if stage in self.render_functions:
                     self.past_action_stage = self.action_stage
@@ -583,7 +624,7 @@ class Game:
         for i in range(17):
             x = 0
             for j in range(32):
-                screen.blit(pygame.image.load(self.lst_textures[self.board.map[i][j]]), (x, y))
+                screen.blit(self.lst_textures[self.board.map[i][j]], (x, y))
                 x += 60
             y += 60
         x, y = 500, 0
@@ -613,9 +654,9 @@ class Game:
         lst = self.board.dict_builds[name_build]
         cords = lst[2]
         x, y = 780, 290
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (600, 700)), (640, 140))
+        screen.blit(self.scroll_builds, (640, 140))
         self.print_text(35, name_build, cords)
-        if name_build == "Кузня" and  self.board.get_alchemistry_stage() >= 3:
+        if name_build == "Кузня" and self.board.get_alchemistry_stage() >= 3:
             names = lst[0]
             costs = lst[1]
             build = lst[3]
@@ -646,7 +687,7 @@ class Game:
         self.render_button(140, 45, x, y, "Выход", "exit_windows")
 
     def render_esc_window(self):
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
+        screen.blit(self.scroll_esc, (720, 240))
         self.render_button(240, 50, 825, 340, "Продолжить игру", "map_VS")
         self.render_button(240, 50, 825, 400, "Главное меню", "main_menu")
         self.render_button(240, 50, 825, 460, "Сохранить")
@@ -656,21 +697,29 @@ class Game:
         if click[0] == 1 and 825 < mouse[0] < 1015 and 340 < mouse[1] < 570:
             self.is_esc = False
 
+    def render_custom_maps_window(self):
+        screen.fill((0, 0, 0))
+        x = 0
+        for i in range(32):
+            pygame.draw.line(screen, (10, 109, 100), (x, 0), (x, 1080))
+            x += 60
+        y = 0
+        for i in range(17):
+            pygame.draw.line(screen, (10, 109, 100), (0, y), (1920, y))
+            y += 60
+        # self.render_button(240, 50, 825, 340, "Выход", "main_menu")
+
     def render_mode_selection_screen(self):
-        screen.blit(main_screen, (0, 0))
+        screen.blit(self.main_screen, (0, 0))
         self.print_text(40, "Выбирите режим", (800, 10))
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (800, 1100)), (-70, -50))
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (800, 1100)), (560, -50))
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (800, 1100)), (1190, -50))
+        screen.blit(self.scroll_mode_selection, (-70, -50))
+        screen.blit(self.scroll_mode_selection, (560, -50))
+        screen.blit(self.scroll_mode_selection, (1190, -50))
         self.render_button(135, 55, 250, 80, "1 VS 1", "maps", font_size=45)
         self.render_button(135, 55, 890, 80, "Waves", font_size=45)
         self.render_button(170, 55, 1500, 80, "Invasion", font_size=45)
-        lst = ["description_1_VS_1", "description_waves", "description_invasion"]
         x, y = 110, 175
-        for filename in lst:
-            text = self.board.load_text("texts/" + filename)
-            for i in range(len(text) - 1):
-                text[i] = text[i][:-1]
+        for text in self.texts_mode_selection:
             for elem in text:
                 self.print_text(30, elem, (x, y))
                 y += 35
@@ -678,8 +727,8 @@ class Game:
             x += 630
 
     def render_load_mode_screen(self):
-        screen.blit(main_screen, (0, 0))
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (300, 350)), (810, 330))
+        screen.blit(self.main_screen, (0, 0))
+        screen.blit(self.scroll_load_mode, (810, 330))
         self.print_text(40, "Какой режим загрузить?", (780, 20))
         self.render_button(100, 40, 900, 410, "1 VS 1")
         self.render_button(100, 40, 900, 470, "Waves")
@@ -687,12 +736,12 @@ class Game:
         self.render_button(100, 40, 870, 580, "Выход", "main_menu")
 
     def render_selection_map_window(self):
-        screen.blit(main_screen, (0, 0))
+        screen.blit(self.main_screen, (0, 0))
         self.print_text(40, "Выбирите карту", (850, 10))
         self.render_button(596, 344, 90, 90, "", "isle")
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\isle_screen.PNG"), (576, 324)), (100, 100))
+        screen.blit(self.image_isle_map, (100, 100))
         self.render_button(596, 344, 700, 90, "", "forest")
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\forest_screen.PNG"), (576, 324)), (710, 100))
+        screen.blit(self.image_forest_map, (710, 100))
 
     def load_isle(self):
         self.board.map = self.board.load_map("maps/isle")
@@ -715,27 +764,28 @@ class Game:
         self.action_stage = "map_VS"
 
     def render_home_screen(self):
-        screen.blit(main_screen, (0, 0))
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (460, 400)), (750, 320))
-        self.render_button(250, 45, 850, 400, "Начать новую игру", "mode_selection")
-        self.render_button(250, 45, 850, 450, "Загрузить игру", "load_selection")
-        self.render_button(250, 45, 850, 500, "Настройки", "settings")
-        self.render_button(250, 45, 850, 550, "Обучение", "training_page0")
-        self.render_button(170, 45, 850, 600, "Выход", "exit")
+        screen.blit(self.main_screen, (0, 0))
+        screen.blit(self.scroll_home, (750, 290))
+        self.render_button(250, 45, 850, 370, "Начать новую игру", "mode_selection")
+        self.render_button(250, 45, 850, 420, "Загрузить игру", "load_selection")
+        self.render_button(250, 45, 850, 470, "Настройки", "settings")
+        self.render_button(250, 45, 850, 520, "Обучение", "training_page0")
+        self.render_button(250, 45, 850, 570, "Редактор карт", "custom_maps")
+        self.render_button(170, 45, 850, 620, "Выход", "exit")
 
     def print_text(self, size, message, location, color=(0, 0, 0), fnt='serif'):
         screen.blit(pygame.font.SysFont(fnt, size).render(message, True, color), location)
 
     def render_training_screen(self):
-        screen.blit(main_screen, (0, 0))
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (1200, 1200)), (350, -90))
+        screen.blit(self.main_screen, (0, 0))
+        screen.blit(self.scroll_training, (350, -90))
         text = self.board.load_text("texts/" + "training_page" + str(self.stage_traning_window))
         if self.stage_traning_window != 0:
             self.render_button(70, 60, 595, 915, "", "right")
-            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\arrow_left.png"), (60, 50)), (600, 920))
+            screen.blit(self.image_arrow_left, (600, 920))
         if self.stage_traning_window != 11:
             self.render_button(70, 60, 1235, 915, "", "left")
-            screen.blit(pygame.transform.scale(pygame.image.load(r"textures\arrow_right.png"), (60, 50)), (1240, 920))
+            screen.blit(self.image_arrow_right, (1240, 920))
         self.render_button(200, 50, 850, 920, "Главное меню", "main_menu")
         for i in range(len(text) - 1):
             text[i] = text[i][:-1]
@@ -752,7 +802,7 @@ class Game:
 
     def render_construction_window(self, pos):
         if self.board.map[pos[1]][pos[0]] == 0:
-            screen.blit(construction_window_screen, (0, 0))
+            screen.blit(self.construction_window_screen, (0, 0))
             cout = 0
             alchemistry = self.board.get_alchemistry_stage()
             if alchemistry == 0:
@@ -762,7 +812,7 @@ class Game:
             else:
                 build = (16, 21)
             for i in range(build[0], build[1]):
-                screen.blit(pygame.image.load(self.lst_textures[i]), (20, 20 + cout))
+                screen.blit(self.lst_textures[i], (20, 20 + cout))
                 cout += 100
             self.render_button(70, 50, 100, 30, "Дом", "house")
             self.print_text(20, "Деревo: 20, Руда: 0, Слитки: 5", (110, 5))
@@ -791,8 +841,8 @@ class Game:
         self.board.build(what_build, self.board.selection_cell)
 
     def render_settings_window(self):
-        screen.blit(main_screen, (0, 0))
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (580, 600)), (680, 150))
+        screen.blit(self.main_screen, (0, 0))
+        screen.blit(self.scroll_settings, (680, 150))
         if self.past_action_stage == "map_VS":
             self.render_button(240, 50, 850, 260, "Продолжить игру", "map_VS")
         self.render_button(240, 50, 850, 320, "Главное меню", "main_menu")
@@ -826,10 +876,10 @@ class Game:
     def render_win_window(self):
         if self.cout_amogus_fleks == 0 and self.is_sounds:
             pygame.mixer.Sound.play(pygame.mixer.Sound(r'sounds\win.mp3'))
-        screen.blit(pygame.transform.scale(pygame.image.load(r"textures\scroll.png"), (450, 500)), (720, 240))
+        screen.blit(self.scroll_win, (720, 240))
         if self.cout_amogus_fleks == len(self.amogus_fleks) or self.cout_amogus_fleks == 0:
             self.cout_amogus_fleks = 1
-        screen.blit(pygame.transform.scale(pygame.image.load(self.amogus_fleks[self.cout_amogus_fleks - 1]), (200, 150)), (830, 390))
+        screen.blit(self.amogus_fleks[self.cout_amogus_fleks - 1], (840, 390))
         self.cout_amogus_fleks += 1
         self.print_text(25, "Победил игрок номер " + str(self.board.motion), (815, 350))
         self.render_button(80, 35, 820, 600, "Выход", "main_menu", font_size=25)
@@ -876,21 +926,19 @@ class Swordsman:
             self.death = True
 
 
-main_screen = pygame.transform.scale(pygame.image.load(r"textures\background.jpg"), (1920, 1080))
-construction_window_screen = pygame.transform.scale(pygame.image.load(r"textures\background_construction_window.PNG"), (400, 1080))
 running = True
 size = 1920, 1020
 pygame.init()
-pygame.display.set_caption("Castle story")
 screen = pygame.display.set_mode(size)
 pygame.display.set_icon(pygame.image.load("textures\icon.png"))
 game = Game()
 pygame.mixer.music.load("sounds\soundtrack.mp3")
 pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(0.2)
-fps = 30
+fps = 60
 clock = pygame.time.Clock()
 while running:
+    pygame.display.set_caption("Castle story(FPS: " + str(round(clock.get_fps())) + ")")
     is_click = False
     for event in pygame.event.get():
         if event.type == pygame.QUIT or game.exit:
@@ -907,4 +955,3 @@ while running:
     game.render()
     clock.tick(fps)
     pygame.display.flip()
-"""После улутшения чего либо окно строительства открывается после Второго клика"""
