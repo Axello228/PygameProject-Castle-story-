@@ -96,10 +96,10 @@ class Board:
                     self.location_my_castle = (j, i)
                 if self.map[i][j] == 3:
                     self.location_bot_castle = (j, i)
-        self.player1 = [1000, 1000, 1000]
+        self.player1 = [10, 0, 0]
         self.builds_player1 = []
         self.edifice_player1 = []
-        self.player2 = [1000, 1000, 1000]
+        self.player2 = [10, 0, 0]
         self.builds_player2 = []
         self.edifice_player2 = []
         self.motion = 1
