@@ -707,7 +707,7 @@ class Game:
         for i in range(17):
             pygame.draw.line(screen, (10, 109, 100), (0, y), (1920, y))
             y += 60
-        # self.render_button(240, 50, 825, 340, "Выход", "main_menu")
+        self.render_button(240, 50, 825, 340, "Выход", "main_menu")
 
     def render_mode_selection_screen(self):
         screen.blit(self.main_screen, (0, 0))
